@@ -13,12 +13,11 @@ public class Main {
 		server.start(new HttpServerCallback() {
 			@Override
 			public void onSuccess() {
-				log.debug("启动成功啦！端口是：{}", 8989);
-			}
 
+			}
 			@Override
 			public void onError() {
-				log.debug("启动失败了...");
+
 				server.stop();
 			}
 		});
