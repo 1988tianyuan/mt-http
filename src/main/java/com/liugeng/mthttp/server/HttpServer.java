@@ -1,12 +1,15 @@
 package com.liugeng.mthttp.server;
 
-import com.liugeng.mthttp.server.handler.DefaultServerInitHandler;
+import com.liugeng.mthttp.server.handler.ClientInitializer;
+import com.liugeng.mthttp.server.handler.MantianHttpInitHandler;
 import com.liugeng.mthttp.server.handler.ServerInitializer;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.http.HttpObjectAggregator;
+import io.netty.handler.codec.http.HttpServerCodec;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -36,12 +39,7 @@ public class HttpServer implements Server {
 		bootstrap.group(bossGroup, workerGroup)
 			.channel(NioServerSocketChannel.class)
 			.handler(new ServerInitializer())
-			.childHandler(new ChannelInitializer<NioSocketChannel>() {
-				@Override
-				protected void initChannel(NioSocketChannel nioSocketChannel) throws Exception {
-					nioSocketChannel.pipeline().addLast(new DefaultServerInitHandler());
-				}
-			});
+			.childHandler(new ClientInitializer());
 
 		bootstrap.bind(port)
 			.addListener(future -> {
