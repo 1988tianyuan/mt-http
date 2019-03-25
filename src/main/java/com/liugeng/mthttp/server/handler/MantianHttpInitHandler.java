@@ -1,8 +1,13 @@
 package com.liugeng.mthttp.server.handler;
 
+import static io.netty.handler.codec.http.HttpUtil.*;
+
 import java.nio.charset.Charset;
 import java.util.List;
+import java.util.Map;
 
+import com.liugeng.mthttp.router.HttpDispatcher;
+import com.liugeng.mthttp.router.HttpExecutor;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -19,26 +24,15 @@ import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.QueryStringDecoder;
+import io.netty.handler.codec.http.QueryStringEncoder;
+import io.netty.util.AttributeKey;
 
 public class MantianHttpInitHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
-		HttpHeaders headers = request.headers();
-		int contentLength = Integer.valueOf(headers.get("Content-length"));
-		ByteBuf reqBodyBuffer = request.content();
-		byte[] body = new byte[contentLength];
-		reqBodyBuffer.readBytes(body);
-		String bodyStr = new String(body, Charset.defaultCharset());
-		System.out.println(bodyStr);
-
-		HttpHeaders repHeaders = new CombinedHttpHeaders(true);
-		ByteBuf repBodyBuffer = ctx.alloc().ioBuffer();
-		repBodyBuffer.writeBytes("哈哈哈".getBytes(Charset.defaultCharset()));
-		repHeaders.set(HttpHeaderNames.CONTENT_LENGTH, repBodyBuffer.readableBytes());
-		repHeaders.set(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN);
-		FullHttpResponse response = new DefaultFullHttpResponse(
-			request.protocolVersion(), HttpResponseStatus.OK, repBodyBuffer, repHeaders, repHeaders);
-		ctx.channel().writeAndFlush(response);
+		HttpDispatcher dispatcher = (HttpDispatcher) ctx.channel().attr(AttributeKey.valueOf("dispatcher")).get();
+		dispatcher.dispatch(ctx, request);
 	}
 }
