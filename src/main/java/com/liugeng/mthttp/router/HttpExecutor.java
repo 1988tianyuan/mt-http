@@ -8,5 +8,5 @@ import io.netty.handler.codec.http.HttpRequest;
 
 public interface HttpExecutor {
 
-	void execute(ChannelHandlerContext context, HttpRequestEntity requestEntity);
+	void execute(ConnectContext context) throws Exception;
 }

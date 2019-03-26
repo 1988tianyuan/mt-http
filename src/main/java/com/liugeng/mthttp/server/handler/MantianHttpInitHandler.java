@@ -6,7 +6,6 @@ import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
 
-import com.liugeng.mthttp.router.HttpDispatcher;
 import com.liugeng.mthttp.router.HttpExecutor;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -27,12 +26,14 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.codec.http.QueryStringEncoder;
 import io.netty.util.AttributeKey;
+import io.netty.util.ReferenceCountUtil;
 
 public class MantianHttpInitHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
-		HttpDispatcher dispatcher = (HttpDispatcher) ctx.channel().attr(AttributeKey.valueOf("dispatcher")).get();
-		dispatcher.dispatch(ctx, request);
+		System.out.println("当前channel的线程：" + Thread.currentThread().getName());
+		request.retain();
+		ctx.fireChannelRead(request);
 	}
 }

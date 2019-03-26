@@ -1,8 +1,11 @@
 package com.liugeng.mthttp.pojo;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
+import com.liugeng.mthttp.constant.HttpMethod;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpHeaders;
@@ -12,7 +15,7 @@ public class HttpRequestEntity {
 	public HttpRequestEntity() {
 	}
 
-	public HttpRequestEntity(Map<String, List<String>> queryParams, String path, String method,
+	public HttpRequestEntity(Map<String, List<String>> queryParams, String path, HttpMethod method,
 		ByteBuf bodyBuf, Channel channel, HttpHeaders httpHeaders) {
 		this.queryParams = queryParams;
 		this.path = path;
@@ -20,19 +23,44 @@ public class HttpRequestEntity {
 		this.bodyBuf = bodyBuf;
 		this.channel = channel;
 		this.httpHeaders = httpHeaders;
+		this.attributes = new HashMap<>();
 	}
 
 	private Map<String, List<String>> queryParams;
 
 	private String path;
 
-	private String method;
+	private HttpMethod method;
 
 	private ByteBuf bodyBuf;
 
 	private Channel channel;
 
 	private HttpHeaders httpHeaders;
+
+	private Map<String, Object> attributes;
+
+	public Map<String, Object> getAttributes() {
+		return attributes;
+	}
+
+	public void setAttribute(String key, Object value) {
+		if (this.attributes == null ) {
+			this.attributes = new HashMap<>();
+		}
+		attributes.put(key, value);
+	}
+
+	public Object getAttribute(String key) {
+		if (attributes == null) {
+			throw new NullPointerException("attributes in requestEntity is not initialized !");
+		}
+		return attributes.get(key);
+	}
+
+	public void setAttributes(Map<String, Object> attributes) {
+		this.attributes = attributes;
+	}
 
 	public HttpHeaders getHttpHeaders() {
 		return httpHeaders;
@@ -66,11 +94,11 @@ public class HttpRequestEntity {
 		this.path = path;
 	}
 
-	public String getMethod() {
+	public HttpMethod getMethod() {
 		return method;
 	}
 
-	public void setMethod(String method) {
+	public void setMethod(HttpMethod method) {
 		this.method = method;
 	}
 
@@ -102,7 +130,7 @@ public class HttpRequestEntity {
 
 		private Map<String, List<String>> queryParams;
 		private String path;
-		private String method;
+		private HttpMethod method;
 		private ByteBuf bodyBuf;
 		private Channel channel;
 		private HttpHeaders httpHeaders;
@@ -117,7 +145,7 @@ public class HttpRequestEntity {
 			return this;
 		}
 
-		public Builder method (String method) {
+		public Builder method (HttpMethod method) {
 			this.method = method;
 			return this;
 		}
