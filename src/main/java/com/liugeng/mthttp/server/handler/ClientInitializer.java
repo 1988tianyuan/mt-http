@@ -3,7 +3,9 @@ package com.liugeng.mthttp.server.handler;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ThreadFactory;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -37,7 +39,7 @@ public class ClientInitializer extends ChannelInitializer<NioSocketChannel> {
 			.addLast(new HttpServerCodec())
 			.addLast(new HttpObjectAggregator(Integer.MAX_VALUE))
 			.addLast(new MantianHttpInitHandler())
-			.addLast(eventExecutors, new HttpDispatcherHandler(retrievePackages("com.liugeng.mthttp")));
+			.addLast(eventExecutors, new HttpDispatcherHandler(retrievePackages("com.liugeng.mthttp.test")));
 	}
 
 
@@ -51,8 +53,8 @@ public class ClientInitializer extends ChannelInitializer<NioSocketChannel> {
 			if (annotationMetadata.hasAnnotation(HttpController.class.getName())) {
 				if (annotationMetadata.hasAnnotation(HttpRouter.class.getName())) {
 					AnnotationAttributes attributes = annotationMetadata.getAnnotationAttributes(HttpRouter.class.getName());
-					String[] paths = (String[]) attributes.get("path");
-					HttpMethod method = (HttpMethod) attributes.get("method");
+					String[] paths = attributes.get("path").toArray(new String[0]);
+					HttpMethod method = HttpMethod.valueOf((String)attributes.get("method").toArray()[0]);
 					ExecutedMethodWrapper methodWrapper = genMethodWrapper(metadataReader.getClassMetadata().getClassName());
 					HttpExecutor httpExecutor = new DefaultHttpExecutor(methodWrapper);
 					for (String path : paths) {
@@ -74,5 +76,4 @@ public class ClientInitializer extends ChannelInitializer<NioSocketChannel> {
 		methodWrapper.setParameters(methodWrapper.getUserMethod().getParameters());
 		return methodWrapper;
 	}
-
 }

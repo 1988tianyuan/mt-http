@@ -16,6 +16,13 @@
         <guava.version>27.1-jre</guava.version>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>aliyunmaven</id>
+            <url>http://maven.aliyun.com/nexus/content/groups/public/</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <!-- netty -->
         <dependency>
@@ -53,6 +60,12 @@
             <artifactId>guava</artifactId>
             <version>${guava.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.objectweb.asm</groupId>
+            <artifactId>com.springsource.org.objectweb.asm</artifactId>
+            <version>3.2.0</version>
+        </dependency>
+
 
     </dependencies>
 

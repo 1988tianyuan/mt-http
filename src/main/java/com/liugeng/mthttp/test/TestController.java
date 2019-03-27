@@ -1,4 +1,4 @@
-package com.liugeng.mthttp;
+package com.liugeng.mthttp.test;
 
 import com.liugeng.mthttp.constant.HttpMethod;
 import com.liugeng.mthttp.router.annotation.HttpController;

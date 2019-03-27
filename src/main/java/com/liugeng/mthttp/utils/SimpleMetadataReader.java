@@ -8,7 +8,7 @@ import com.liugeng.mthttp.utils.asm.AnnotationMetadata;
 import com.liugeng.mthttp.utils.asm.AnnotationMetadataReadingVisitor;
 import com.liugeng.mthttp.utils.asm.ClassMetadata;
 import com.liugeng.mthttp.utils.io.Resource;
-import jdk.internal.org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassReader;
 
 /**
  * read Class info by asm tools
@@ -25,7 +25,7 @@ public class SimpleMetadataReader implements MetadataReader {
         try {
             // retrieve class binary code by ClassReader
             classReader = new ClassReader(inputStream);
-        }finally {
+        } finally {
             inputStream.close();
         }
         AnnotationMetadataReadingVisitor visitor = new AnnotationMetadataReadingVisitor();

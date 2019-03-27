@@ -15,7 +15,7 @@ import com.liugeng.mthttp.constant.HttpMethod;
 @Documented
 public @interface HttpRouter {
 
-	HttpMethod[] method() default {GET};
+	HttpMethod method() default GET;
 
 	String[] path() default {"/"};
 }

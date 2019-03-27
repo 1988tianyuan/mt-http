@@ -1,6 +1,21 @@
 package com.liugeng.mthttp.utils.asm;
 
-import java.util.LinkedHashMap;
+import com.google.common.collect.Sets;
 
-public class AnnotationAttributes extends LinkedHashMap<String, Object> {
+import java.util.LinkedHashMap;
+import java.util.Set;
+
+public class AnnotationAttributes extends LinkedHashMap<String, Set<String>> {
+
+    public void putMulti(String key, String value) {
+        Set<String> valueSet;
+        if (containsKey(key)) {
+            valueSet = get(key);
+            valueSet.add(value);
+        } else {
+            valueSet = Sets.newHashSet(value);
+            put(key, valueSet);
+        }
+    }
+
 }

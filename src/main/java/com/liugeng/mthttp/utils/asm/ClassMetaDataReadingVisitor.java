@@ -1,13 +1,12 @@
 package com.liugeng.mthttp.utils.asm;
 
 import com.liugeng.mthttp.utils.ClassUtils;
-import jdk.internal.org.objectweb.asm.ClassVisitor;
-import jdk.internal.org.objectweb.asm.Opcodes;
+import org.objectweb.asm.*;
 
 /**
  * 通过asm工具读取类的元数据
  */
-public class ClassMetaDataReadingVisitor extends ClassVisitor implements ClassMetadata {
+public class ClassMetaDataReadingVisitor implements ClassVisitor, ClassMetadata {
 
 	private boolean isAbstract;
 	private boolean isInterface;
@@ -18,7 +17,7 @@ public class ClassMetaDataReadingVisitor extends ClassVisitor implements ClassMe
 	private String[] interfaces;
 
 	public ClassMetaDataReadingVisitor() {
-		super(262144);
+
 	}
 
 	@Override
@@ -36,6 +35,46 @@ public class ClassMetaDataReadingVisitor extends ClassVisitor implements ClassMe
 		for(int i = 0; i < interfaces.length; i++){
 			this.interfaces[i] = ClassUtils.convertResourcePathtoClassName(interfaces[i]);
 		}
+	}
+
+	@Override
+	public void visitSource(String s, String s1) {
+
+	}
+
+	@Override
+	public void visitOuterClass(String s, String s1, String s2) {
+
+	}
+
+	@Override
+	public AnnotationVisitor visitAnnotation(String s, boolean b) {
+		return null;
+	}
+
+	@Override
+	public void visitAttribute(Attribute attribute) {
+
+	}
+
+	@Override
+	public void visitInnerClass(String s, String s1, String s2, int i) {
+
+	}
+
+	@Override
+	public FieldVisitor visitField(int i, String s, String s1, String s2, Object o) {
+		return null;
+	}
+
+	@Override
+	public MethodVisitor visitMethod(int i, String s, String s1, String s2, String[] strings) {
+		return null;
+	}
+
+	@Override
+	public void visitEnd() {
+
 	}
 
 	public void setInterface(boolean anInterface) {
