@@ -1,11 +1,11 @@
-package com.liugeng.mthttp.router.asm;
+package com.liugeng.mthttp.utils.asm;
 
 import com.liugeng.mthttp.utils.ClassUtils;
 import jdk.internal.org.objectweb.asm.ClassVisitor;
 import jdk.internal.org.objectweb.asm.Opcodes;
 
 /**
- * 通过asm工具读取类的原数据
+ * 通过asm工具读取类的元数据
  */
 public class ClassMetaDataReadingVisitor extends ClassVisitor implements ClassMetadata {
 

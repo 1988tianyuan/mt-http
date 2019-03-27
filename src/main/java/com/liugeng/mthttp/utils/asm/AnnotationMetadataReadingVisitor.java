@@ -1,4 +1,4 @@
-package com.liugeng.mthttp.router.asm;
+package com.liugeng.mthttp.utils.asm;
 
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -7,6 +7,7 @@ import java.util.Set;
 
 import jdk.internal.org.objectweb.asm.AnnotationVisitor;
 import jdk.internal.org.objectweb.asm.Type;
+import jdk.internal.org.objectweb.asm.tree.AnnotationNode;
 
 /**
  * 通过asm工具读取类的Annotation数据
@@ -22,7 +23,7 @@ public class AnnotationMetadataReadingVisitor extends ClassMetaDataReadingVisito
 	public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
 		String className = Type.getType(desc).getClassName();
 		this.annotationSet.add(className);
-		return new AnnotationAttributeReadingVisitor(className, attributesMap);
+		return new AnnotationAttributeReadingVisitor(className, desc, attributesMap);
 	}
 
 	public AnnotationAttributes getAnnotationAttributes(String annotation){

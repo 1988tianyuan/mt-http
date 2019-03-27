@@ -1,8 +1,8 @@
-package com.liugeng.mthttp.router.asm;
+package com.liugeng.mthttp.utils.asm;
 
 import java.util.Set;
 
-public interface AnnotationMetadata extends ClassMetadata{
+public interface AnnotationMetadata extends ClassMetadata {
 
     boolean hasAnnotation(String annotation);
 

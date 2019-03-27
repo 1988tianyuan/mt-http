@@ -1,4 +1,4 @@
-package com.liugeng.mthttp.router.asm;
+package com.liugeng.mthttp.utils.asm;
 
 public interface ClassMetadata {
     String getClassName();
