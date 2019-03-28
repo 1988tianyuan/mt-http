@@ -2,6 +2,7 @@ package com.liugeng.mthttp.utils;
 
 import com.liugeng.mthttp.utils.asm.AnnotationMetadata;
 import com.liugeng.mthttp.utils.asm.ClassMetadata;
+import com.liugeng.mthttp.utils.asm.ClassMethodMetadata;
 import com.liugeng.mthttp.utils.io.Resource;
 
 public interface MetadataReader {
@@ -10,4 +11,6 @@ public interface MetadataReader {
     ClassMetadata getClassMetadata();
 
     AnnotationMetadata getAnnotationMetadata();
+
+    ClassMethodMetadata getClassMethodMetadata();
 }

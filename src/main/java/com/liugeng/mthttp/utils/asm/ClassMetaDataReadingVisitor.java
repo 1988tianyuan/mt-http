@@ -15,9 +15,12 @@ public class ClassMetaDataReadingVisitor implements ClassVisitor, ClassMetadata 
 	private String className;
 	private String superClassName;
 	private String[] interfaces;
+	private final ClassMethodReadingVisitor methodReadingVisitor;
+	private final AnnotationMetadataReadingVisitor annotationMetadataReadingVisitor;
 
 	public ClassMetaDataReadingVisitor() {
-
+		this.methodReadingVisitor = new ClassMethodReadingVisitor();
+		this.annotationMetadataReadingVisitor = new AnnotationMetadataReadingVisitor();
 	}
 
 	@Override
@@ -48,8 +51,8 @@ public class ClassMetaDataReadingVisitor implements ClassVisitor, ClassMetadata 
 	}
 
 	@Override
-	public AnnotationVisitor visitAnnotation(String s, boolean b) {
-		return null;
+	public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
+		return annotationMetadataReadingVisitor.visitAnnotation(desc, visible);
 	}
 
 	@Override
@@ -68,13 +71,25 @@ public class ClassMetaDataReadingVisitor implements ClassVisitor, ClassMetadata 
 	}
 
 	@Override
-	public MethodVisitor visitMethod(int i, String s, String s1, String s2, String[] strings) {
-		return null;
+	public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
+		return methodReadingVisitor.visitMethod(access, name, desc, signature, exceptions);
 	}
 
 	@Override
 	public void visitEnd() {
 
+	}
+
+	public String[] getInterfaces() {
+		return interfaces;
+	}
+
+	public ClassMethodMetadata getClassMethodMetadata() {
+		return methodReadingVisitor;
+	}
+
+	public AnnotationMetadata getAnnotationMetadata() {
+		return annotationMetadataReadingVisitor;
 	}
 
 	public void setInterface(boolean anInterface) {

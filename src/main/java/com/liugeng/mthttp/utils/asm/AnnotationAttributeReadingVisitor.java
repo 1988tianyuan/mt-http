@@ -32,7 +32,6 @@ public class AnnotationAttributeReadingVisitor implements AnnotationVisitor {
 
     @Override
     public AnnotationVisitor visitArray(String name) {
-        System.out.println("visitArray:" + name);
         return new AnnotationArrayAttrVisitor(name, attributes);
     }
 

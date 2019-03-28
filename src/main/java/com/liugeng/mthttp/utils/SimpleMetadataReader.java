@@ -6,7 +6,9 @@ import java.io.InputStream;
 
 import com.liugeng.mthttp.utils.asm.AnnotationMetadata;
 import com.liugeng.mthttp.utils.asm.AnnotationMetadataReadingVisitor;
+import com.liugeng.mthttp.utils.asm.ClassMetaDataReadingVisitor;
 import com.liugeng.mthttp.utils.asm.ClassMetadata;
+import com.liugeng.mthttp.utils.asm.ClassMethodMetadata;
 import com.liugeng.mthttp.utils.io.Resource;
 import org.objectweb.asm.ClassReader;
 
@@ -18,6 +20,7 @@ public class SimpleMetadataReader implements MetadataReader {
     private final Resource resource;
     private final ClassMetadata classMetadata;
     private final AnnotationMetadata annotationMetadata;
+    private final ClassMethodMetadata classMethodMetadata;
 
     public SimpleMetadataReader(Resource resource) throws IOException{
         InputStream inputStream = new BufferedInputStream(resource.getInputStream());
@@ -28,10 +31,11 @@ public class SimpleMetadataReader implements MetadataReader {
         } finally {
             inputStream.close();
         }
-        AnnotationMetadataReadingVisitor visitor = new AnnotationMetadataReadingVisitor();
+        ClassMetaDataReadingVisitor visitor = new ClassMetaDataReadingVisitor();
         classReader.accept(visitor, ClassReader.SKIP_DEBUG);
-        this.annotationMetadata = visitor;
+        this.annotationMetadata = visitor.getAnnotationMetadata();
         this.classMetadata = visitor;
+        this.classMethodMetadata = visitor.getClassMethodMetadata();
         this.resource = resource;
     }
 
@@ -48,5 +52,10 @@ public class SimpleMetadataReader implements MetadataReader {
     @Override
     public AnnotationMetadata getAnnotationMetadata() {
         return annotationMetadata;
+    }
+
+    @Override
+    public ClassMethodMetadata getClassMethodMetadata() {
+        return classMethodMetadata;
     }
 }

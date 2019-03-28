@@ -13,6 +13,8 @@ import com.liugeng.mthttp.router.ConnectContext;
 import com.liugeng.mthttp.router.support.HttpConnectContext;
 import com.liugeng.mthttp.router.HttpExecutor;
 import com.liugeng.mthttp.router.support.HttpExecutorMappingInfo;
+import com.liugeng.mthttp.utils.Assert;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
@@ -23,6 +25,7 @@ import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.QueryStringDecoder;
 
+@ChannelHandler.Sharable
 public class HttpDispatcherHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
 	private final Map<HttpExecutorMappingInfo, HttpExecutor> executorMap;
@@ -55,6 +58,7 @@ public class HttpDispatcherHandler extends SimpleChannelInboundHandler<FullHttpR
 		HttpRequestEntity requestEntity = connectContext.getRequest();
 		HttpExecutorMappingInfo mappingInfo = getMappingInfo(requestEntity);
 		HttpExecutor executor = getExecutor(mappingInfo);
+		Assert.notNull(executor, "no executor for this request: " + connectContext.getRequest());
 		executor.execute(connectContext);
 	}
 
