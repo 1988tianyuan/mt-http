@@ -15,17 +15,10 @@ public class HttpConnectContext implements ConnectContext {
 
 	private HttpMethod httpMethod;
 
-	private String accept;
-
-
 	public HttpConnectContext(HttpRequestEntity request) {
 		this.request = request;
 		this.response = new HttpResponseEntity();
-		this.accept = request.getHttpHeaders().get(ACCEPT);
 	}
-
-
-
 
 	@Override
 	public void setRequest(HttpRequestEntity request) {
@@ -46,4 +39,6 @@ public class HttpConnectContext implements ConnectContext {
 	public HttpResponseEntity getResponse() {
 		return response;
 	}
+
+
 }

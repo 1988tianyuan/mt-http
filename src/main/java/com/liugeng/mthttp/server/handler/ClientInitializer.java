@@ -39,14 +39,15 @@ public class ClientInitializer extends ChannelInitializer<NioSocketChannel> {
 	}
 
 	@Override
-	protected void initChannel(NioSocketChannel nioSocketChannel) throws Exception {
+	protected void initChannel(NioSocketChannel nioSocketChannel) {
 		ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat("dispatcher-thread-%d").build();
 		EventLoopGroup eventExecutors = new NioEventLoopGroup(0, threadFactory);
 		nioSocketChannel.pipeline()
 			.addLast(new HttpServerCodec())
 			.addLast(new HttpObjectAggregator(Integer.MAX_VALUE))
 			.addLast(new MantianHttpInitHandler())
-			.addLast(eventExecutors, dispatcherHandler);
+			.addLast(eventExecutors, dispatcherHandler)
+			.addLast(ExceptionCaughtHandler.INSTANCE);
 	}
 
 

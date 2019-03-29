@@ -7,13 +7,13 @@ import com.liugeng.mthttp.router.annotation.HttpController;
 import com.liugeng.mthttp.router.annotation.HttpRouter;
 
 @HttpController
-@HttpRouter(path = {"/hehehe"})
+@HttpRouter
 public class NewTestController {
 
 	@HttpRouter(path = {"/hi"}, method = HttpMethod.GET)
-	public String hello(String param) {
-		int i = 0;
+	public String hello(String param, int i) {
 		System.out.println(param);
-		return "呵呵呵!";
+		System.out.println(i);
+		return "呵呵呵, 你传了一个数字过来：" + i;
 	}
 }

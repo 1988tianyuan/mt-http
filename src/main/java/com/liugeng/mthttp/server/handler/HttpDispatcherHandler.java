@@ -1,6 +1,5 @@
 package com.liugeng.mthttp.server.handler;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static io.netty.handler.codec.http.HttpUtil.*;
 
 import java.nio.charset.Charset;
@@ -14,6 +13,7 @@ import com.liugeng.mthttp.router.support.HttpConnectContext;
 import com.liugeng.mthttp.router.HttpExecutor;
 import com.liugeng.mthttp.router.support.HttpExecutorMappingInfo;
 import com.liugeng.mthttp.utils.Assert;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -34,47 +34,35 @@ public class HttpDispatcherHandler extends SimpleChannelInboundHandler<FullHttpR
 		this.executorMap = executorMap;
 	}
 
-	public HttpExecutor getExecutor(HttpExecutorMappingInfo mappingInfo) {
-		return this.executorMap.get(mappingInfo);
-	}
-
 	@Override
 	protected void channelRead0(ChannelHandlerContext handlerContext, FullHttpRequest request) throws Exception {
-		System.out.println("当前dispatcher线程：" + Thread.currentThread().getName());
+		HttpRequestEntity requestEntity= resolveRequest(handlerContext.channel(), request);
+		ConnectContext connectContext = new HttpConnectContext(requestEntity);
+		dispatch(connectContext);
+	}
+
+	private HttpRequestEntity resolveRequest(Channel channel, FullHttpRequest request) {
 		Charset charset = getCharset(request, Charset.defaultCharset());
 		QueryStringDecoder queryStringDecoder = new QueryStringDecoder(request.uri(), charset);
 		HttpMethod httpMethod = HttpMethod.valueOf(request.method().name());
-		HttpRequestEntity requestEntity = new HttpRequestEntity.Builder()
+		return new HttpRequestEntity
+			.Builder()
 			.method(httpMethod).path(queryStringDecoder.path())
 			.queryParams(queryStringDecoder.parameters()).bodyBuf(request.content())
-			.channel(handlerContext.channel()).httpHeaders(request.headers())
+			.channel(channel).httpHeaders(request.headers())
 			.build();
-		ConnectContext connectContext = new HttpConnectContext(requestEntity);
-		dispatch(connectContext);
-		handlerContext.channel().writeAndFlush(createFullResponse(connectContext));
 	}
 
 	private void dispatch(ConnectContext connectContext) throws Exception {
 		HttpRequestEntity requestEntity = connectContext.getRequest();
-		HttpExecutorMappingInfo mappingInfo = getMappingInfo(requestEntity);
+		HttpExecutorMappingInfo mappingInfo = new HttpExecutorMappingInfo(requestEntity.getPath(), requestEntity.getMethod());
 		HttpExecutor executor = getExecutor(mappingInfo);
-		Assert.notNull(executor, "no executor for this request: " + connectContext.getRequest());
+		Assert.executorExists(executor, mappingInfo.getPath());
 		executor.execute(connectContext);
 	}
 
-	private HttpExecutorMappingInfo getMappingInfo(HttpRequestEntity requestEntity) {
-		String path = requestEntity.getPath();
-		return new HttpExecutorMappingInfo(path, requestEntity.getMethod());
-	}
-
-	private FullHttpResponse createFullResponse(ConnectContext connectContext) {
-		HttpResponseEntity responseEntity = connectContext.getResponse();
-		HttpHeaders headers = responseEntity.getResponseHeaders();
-		if (headers.get(HttpHeaderNames.CONTENT_LENGTH) == null) {
-			headers.set(HttpHeaderNames.CONTENT_LENGTH, responseEntity.getBodyBuf().readableBytes());
-		}
-		return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
-			responseEntity.getResponseStatus(), responseEntity.getBodyBuf(), headers, headers);
+	private HttpExecutor getExecutor(HttpExecutorMappingInfo mappingInfo) {
+		return this.executorMap.get(mappingInfo);
 	}
 
 }

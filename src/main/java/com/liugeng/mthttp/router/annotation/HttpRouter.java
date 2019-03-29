@@ -17,5 +17,5 @@ public @interface HttpRouter {
 
 	HttpMethod method() default GET;
 
-	String[] path() default {"/"};
+	String[] path() default {""};
 }

@@ -17,7 +17,6 @@ public class Main {
 			}
 			@Override
 			public void onError() {
-
 				server.stop();
 			}
 		});

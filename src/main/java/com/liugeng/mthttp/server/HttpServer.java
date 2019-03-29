@@ -2,8 +2,10 @@ package com.liugeng.mthttp.server;
 
 import static com.liugeng.mthttp.constant.StringConstants.*;
 import static com.liugeng.mthttp.utils.ThrowingConsumerUtil.*;
+import static com.liugeng.mthttp.utils.asm.ClassMethodReadingVisitor.*;
 
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -23,6 +25,7 @@ import com.liugeng.mthttp.router.support.HttpExecutorMappingInfo;
 import com.liugeng.mthttp.server.handler.ClientInitializer;
 import com.liugeng.mthttp.server.handler.HttpDispatcherHandler;
 import com.liugeng.mthttp.server.handler.ServerInitializer;
+import com.liugeng.mthttp.utils.ClassUtils;
 import com.liugeng.mthttp.utils.MetadataReader;
 import com.liugeng.mthttp.utils.SimpleMetadataReader;
 import com.liugeng.mthttp.utils.asm.AnnotationAttributes;
@@ -71,13 +74,14 @@ public class HttpServer implements Server {
 			bootstrap.bind(port)
 				.addListener(future -> {
 					if(future.isSuccess()){
+						log.debug("bind port: {} successfully! server has been started!", port);
 						callback.onSuccess();
 					}else {
 						callback.onError();
 					}
 				});
 		} catch (Exception e) {
-			log.error("error during init HttpServer, stop all the process", e);
+			log.error("error during init HttpServer, stop all the process.", e);
 			callback.onError();
 		} finally {
 			final HttpServer server = this;
@@ -119,23 +123,16 @@ public class HttpServer implements Server {
 			ClassMethodMetadata classMethodMetadata = metadataReader.getClassMethodMetadata();
 			ClassMetadata classMetadata = metadataReader.getClassMetadata();
 			if (classAnnotationMetadata.hasAnnotation(HttpController.class.getName())) {
-				// resolve HttpRouter on this class
+				// resolve HttpRouter on class
 				Set<String> pathsOnClass = null;
 				if (classAnnotationMetadata.hasAnnotation(HttpRouter.class.getName())) {
-					pathsOnClass = resolveClassRouter(metadataReader, executorMap);
+					pathsOnClass = classAnnotationMetadata.getAnnotationAttributes(HttpRouter.class.getName()).get(ROUTER_PATH);
 				}
-				// resolve HttpRouter on this class
+				// resolve HttpRouter on method
 				resolveMethodRouter(pathsOnClass, classMethodMetadata, executorMap, classMetadata);
 			}
 		}
 		return executorMap;
-	}
-
-	private Set<String> resolveClassRouter(MetadataReader metadataReader, Map<HttpExecutorMappingInfo, HttpExecutor> executorMap) throws
-		Exception {
-		AnnotationMetadata camData = metadataReader.getAnnotationMetadata();
-		AnnotationAttributes attributes = camData.getAnnotationAttributes(HttpRouter.class.getName());
-		return attributes.get(ROUTER_PATH);
 	}
 
 	private void resolveMethodRouter(Set<String> pathsOnClass, ClassMethodMetadata methodMetadata,
@@ -150,13 +147,14 @@ public class HttpServer implements Server {
 			);
 	}
 
-	private void buildMappingInfo(ClassMethodReadingVisitor.MethodInfo methodInfo, Map<HttpExecutorMappingInfo, HttpExecutor> executorMap,
+	private void buildMappingInfo(MethodInfo methodInfo, Map<HttpExecutorMappingInfo, HttpExecutor> executorMap,
 		Set<String> pathsOnClass, ClassMethodMetadata methodMetadata, ClassMetadata classMetadata) throws Exception {
 		AnnotationAttributes methodAnnoAttr = methodMetadata.getMethodAnnotationAttr(methodInfo, HttpRouter.class.getName());
 		Set<String> pathsOnMethod = methodAnnoAttr.get(ROUTER_PATH);
 		HttpMethod httpMethod = HttpMethod.valueOf((String)methodAnnoAttr.get(ROUTER_METHOD).toArray()[0]);
 		ExecutedMethodWrapper methodWrapper = genMethodWrapper(classMetadata.getClassName(), methodInfo);
 		HttpExecutor httpExecutor = new DefaultHttpExecutor(methodWrapper);
+		pathsOnClass = pathsOnClass == null ? Collections.singleton("") : pathsOnClass;
 		for (String path : pathsOnMethod) {
 			pathsOnClass.forEach(pathOnClass -> {
 				HttpExecutorMappingInfo mappingInfo = new HttpExecutorMappingInfo(pathOnClass + path, httpMethod);
@@ -165,17 +163,19 @@ public class HttpServer implements Server {
 		}
 	}
 
-	private ExecutedMethodWrapper genMethodWrapper(String clazzName, ClassMethodReadingVisitor.MethodInfo methodInfo) throws Exception {
+	private ExecutedMethodWrapper genMethodWrapper(String clazzName, MethodInfo methodInfo) throws Exception {
 		String[] types = methodInfo.getArgTypes();
 		Class<?>[] paramArgClazzs = new Class[0];
+		// resolve method parameters type
 		if (types != null && types.length > 0) {
 			paramArgClazzs = new Class[types.length];
 			for (int i = 0; i < types.length; i++) {
-				Class<?> paramArgClazz = Class.forName(types[i]);
+				Class<?> paramArgClazz = ClassUtils.parseType(types[i]);
 				paramArgClazzs[i] = paramArgClazz;
 			}
 		}
-		Class<?> clazz = Class.forName(clazzName);
+		// resolve class type
+		Class<?> clazz = ClassUtils.parseType(clazzName);
 		ExecutedMethodWrapper methodWrapper = new ExecutedMethodWrapper();
 		methodWrapper.setUserClass(clazz);
 		methodWrapper.setUserObject(clazz.newInstance());
@@ -183,4 +183,6 @@ public class HttpServer implements Server {
 		methodWrapper.setParameters(methodWrapper.getUserMethod().getParameters());
 		return methodWrapper;
 	}
+
+
 }
