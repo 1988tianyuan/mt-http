@@ -30,7 +30,14 @@ public class ClassMethodReadingVisitor implements ClassVisitor, ClassMethodMetad
 	@Override
 	public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
 		Type[] argTypes = Type.getArgumentTypes(desc);
-		MethodInfo methodInfo = new MethodInfo(name, argTypes);
+		String[] paramArgTypes = null;
+		if (argTypes.length > 0) {
+			paramArgTypes = new String[argTypes.length];
+			for (int i = 0; i < argTypes.length; i++) {
+				paramArgTypes[i] = argTypes[i].getClassName();
+			}
+		}
+		MethodInfo methodInfo = new MethodInfo(name, paramArgTypes);
 		// store current method into methodNameSet
 		methodNameSet.add(methodInfo);
 		return new UserMethodVisitor(methodInfo, methodAnnotationNameMap, methodAnnotationAttrMap);
@@ -119,9 +126,9 @@ public class ClassMethodReadingVisitor implements ClassVisitor, ClassMethodMetad
 
 		private final String methodName;
 
-		private final Type[] argTypes;
+		private final String[] argTypes;
 
-		public MethodInfo(String methodName, Type[] argTypes) {
+		public MethodInfo(String methodName, String[] argTypes) {
 			this.methodName = methodName;
 			this.argTypes = argTypes;
 		}
@@ -130,7 +137,7 @@ public class ClassMethodReadingVisitor implements ClassVisitor, ClassMethodMetad
 			return methodName;
 		}
 
-		public Type[] getArgTypes() {
+		public String[] getArgTypes() {
 			return argTypes;
 		}
 

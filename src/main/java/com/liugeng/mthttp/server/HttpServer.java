@@ -165,14 +165,13 @@ public class HttpServer implements Server {
 		}
 	}
 
-	// todo, refactor with both reflection and asm, now it's just reflection
 	private ExecutedMethodWrapper genMethodWrapper(String clazzName, ClassMethodReadingVisitor.MethodInfo methodInfo) throws Exception {
-		Type[] types = methodInfo.getArgTypes();
+		String[] types = methodInfo.getArgTypes();
 		Class<?>[] paramArgClazzs = new Class[0];
 		if (types != null && types.length > 0) {
 			paramArgClazzs = new Class[types.length];
 			for (int i = 0; i < types.length; i++) {
-				Class<?> paramArgClazz = Class.forName(types[i].getClassName());
+				Class<?> paramArgClazz = Class.forName(types[i]);
 				paramArgClazzs[i] = paramArgClazz;
 			}
 		}
