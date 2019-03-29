@@ -13,20 +13,29 @@ import com.liugeng.mthttp.utils.converter.propertyediors.CustomNumberEditor;
  * converter the origin Object(almost {@link String}) into target type
  * should not be reference type, just primitive type or String
  */
-public class SimpleTypeConverter implements TypeConverter {
+public class PrimitiveTypeConverter implements TypeConverter {
 
     private final Map<Class<?>, PropertyEditor> defaultEditors = new HashMap<>();
 
-    public SimpleTypeConverter(){
+    public PrimitiveTypeConverter(){
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public <T> T convertIfNecessary(Object value, Class<T> requireType) throws Exception {
-        if(ClassUtils.isAssignableValue(requireType, value)){
+        if (ClassUtils.isAssignableValue(requireType, value)) {
             return (T)value;
         } else {
-            if(value instanceof String){
+            boolean isPrim = org.apache.commons.lang3.ClassUtils.isPrimitiveOrWrapper(requireType);
+            boolean isString = (value instanceof String);
+            if (value == null) {
+                if (isPrim) {
+                    value = "0";
+                } else {
+                    return null;
+                }
+            }
+            if(isString){
                 PropertyEditor editor = this.findDefaultEditor(requireType);
                 try {
                     editor.setAsText((String) value);

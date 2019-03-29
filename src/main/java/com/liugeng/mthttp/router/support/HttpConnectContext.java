@@ -10,6 +10,8 @@ import com.liugeng.mthttp.pojo.HttpRequestEntity;
 import com.liugeng.mthttp.pojo.HttpResponseEntity;
 import com.liugeng.mthttp.router.ConnectContext;
 
+import java.awt.font.TextHitInfo;
+
 public class HttpConnectContext implements ConnectContext {
 
 	private HttpRequestEntity request;
@@ -20,19 +22,33 @@ public class HttpConnectContext implements ConnectContext {
 
 	private Cookies requestCookies;
 
+	private Cookies responseCookies;
+
 	public HttpConnectContext(HttpRequestEntity request) {
 		this.request = request;
 		this.response = new HttpResponseEntity();
 		this.requestCookies = new Cookies(Sets.newHashSet());
+		this.responseCookies = new Cookies(Sets.newHashSet());
 	}
 
 	@Override
-	public void addCookies(Cookies cookies) {
-		if (requestCookies == null) {
-			setRequestCookies(cookies);
-		} else {
-			requestCookies.addCookies(cookies);
-		}
+	public void addRequestCookies(Cookies cookies) {
+		requestCookies.addCookies(cookies);
+	}
+
+	@Override
+	public void addResponseCookies(Cookies cookies) {
+		responseCookies.addCookies(cookies);
+	}
+
+	@Override
+	public Cookies getResponseCookies() {
+		return responseCookies;
+	}
+
+	@Override
+	public void setResponseCookies(Cookies responseCookies) {
+		this.responseCookies = responseCookies;
 	}
 
 	@Override

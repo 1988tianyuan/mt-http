@@ -3,6 +3,7 @@ package com.liugeng.mthttp.test;
 import com.liugeng.mthttp.constant.HttpMethod;
 import com.liugeng.mthttp.pojo.Cookies;
 import com.liugeng.mthttp.router.annotation.HttpController;
+import com.liugeng.mthttp.router.annotation.HttpRequestBody;
 import com.liugeng.mthttp.router.annotation.HttpRouter;
 
 @HttpController
@@ -10,9 +11,7 @@ import com.liugeng.mthttp.router.annotation.HttpRouter;
 public class TestController {
 
 	@HttpRouter(path = {"/hi"}, method = HttpMethod.GET)
-	public String hello(String param, Cookies cookies) {
-		System.out.println(String.format("cookies: key:{%s}, value:{%s}", "hahaha", cookies.getCookieValue("hahaha")));
-		cookies.addCookie("hehehe", "哈哈哈哈哈");
+	public String hello(String param) {
 		return "你传过来的信息是：{ " + param + " }";
 	}
 

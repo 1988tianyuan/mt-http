@@ -23,7 +23,13 @@ public interface ConnectContext {
 
 	void setRequestCookies(Cookies requestCookies);
 
-	void addCookies(Cookies cookies);
+	void addRequestCookies(Cookies cookies);
+
+	void addResponseCookies(Cookies cookies);
+
+	Cookies getResponseCookies();
+
+	void setResponseCookies(Cookies requestCookies);
 
 }
 
