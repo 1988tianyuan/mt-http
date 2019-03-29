@@ -12,7 +12,8 @@ public class HttpResponseEntity {
 
 	private HttpResponseStatus responseStatus = HttpResponseStatus.OK;
 
-	private HttpHeaders responseHeaders;
+	// default headers
+	private HttpHeaders responseHeaders = new CombinedHttpHeaders(true);
 
 	public ByteBuf getBodyBuf() {
 		return bodyBuf;
@@ -31,7 +32,7 @@ public class HttpResponseEntity {
 	}
 
 	public HttpHeaders getResponseHeaders() {
-		return responseHeaders == null ? new CombinedHttpHeaders(true) : responseHeaders;
+		return responseHeaders;
 	}
 
 	public void setResponseHeaders(HttpHeaders responseHeaders) {

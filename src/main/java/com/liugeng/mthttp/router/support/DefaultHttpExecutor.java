@@ -9,13 +9,17 @@ import java.util.Map;
 import org.apache.commons.lang3.ClassUtils;
 
 import com.liugeng.mthttp.exception.HttpRequestException;
+import com.liugeng.mthttp.pojo.Cookies;
 import com.liugeng.mthttp.pojo.HttpRequestEntity;
 import com.liugeng.mthttp.router.ConnectContext;
 import com.liugeng.mthttp.router.HttpExecutor;
 import com.liugeng.mthttp.router.HttpResponseResolver;
 import com.liugeng.mthttp.utils.converter.SimpleTypeConverter;
 import com.liugeng.mthttp.utils.converter.TypeConverter;
+import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.cookie.Cookie;
+import io.netty.handler.codec.http.cookie.CookieDecoder;
 
 public class DefaultHttpExecutor implements HttpExecutor {
 
@@ -29,6 +33,7 @@ public class DefaultHttpExecutor implements HttpExecutor {
 	public void execute(ConnectContext context) throws Exception {
 		Object[] args = getMethodArgumentValues(context);
 		Object returnValue = invokeUserMethod(args);
+		setCookies(context);
 		createResponse(returnValue, context);
 	}
 
@@ -49,7 +54,7 @@ public class DefaultHttpExecutor implements HttpExecutor {
 	}
 
 	private Object[] getMethodArgumentValues(ConnectContext context) {
-		Map<String, Object> origParams = getReqParams(context);
+		Map<String, Object> requestParams = getReqParams(context);
 		Parameter[] parameters = userMethod.getParameters();
 		if (parameters == null || parameters.length == 0) {
 			return null;
@@ -58,7 +63,7 @@ public class DefaultHttpExecutor implements HttpExecutor {
 		for (int i = 0; i < parameters.length; i++) {
 			String argName = parameters[i].getName();
 			Class<?> argClazz = parameters[i].getType();
-			Object argValue = origParams.get(argName);
+			Object argValue = requestParams.get(argName);
 			argsValues[i] = convertArgType(argClazz, argValue);
 		}
 		return argsValues;
@@ -66,9 +71,9 @@ public class DefaultHttpExecutor implements HttpExecutor {
 
 
 	private Object convertArgType(Class<?> argClazz, Object argValue) {
+		boolean isPrim = ClassUtils.isPrimitiveOrWrapper(argClazz);
 		try {
 			if (argValue == null) {
-				boolean isPrim = ClassUtils.isPrimitiveOrWrapper(argClazz);
 				if (isPrim) {
 					argValue = "0";
 				} else {
@@ -89,7 +94,7 @@ public class DefaultHttpExecutor implements HttpExecutor {
 		Map<String, List<String>> queryParams = context.getRequest().getQueryParams();
 		Map<String, Object> reqAttributes = context.getRequest().getAttributes();
 		Map<String, Object> origParams = new HashMap<>(reqAttributes);
-		setCookieAndSession(origParams, context);
+		origParams.put("cookies", context.getRequestCookies());
 		if (queryParams != null && !queryParams.isEmpty()) {
 			queryParams.entrySet()
 				.stream()
@@ -99,7 +104,8 @@ public class DefaultHttpExecutor implements HttpExecutor {
 		return origParams;
 	}
 
-	private void setCookieAndSession(Map<String, Object> origParams, ConnectContext context) {
-		// todo
+	private void setCookies(ConnectContext context) {
+		HttpHeaders headers = context.getResponse().getResponseHeaders();
+
 	}
 }

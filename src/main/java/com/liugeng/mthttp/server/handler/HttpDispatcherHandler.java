@@ -4,8 +4,10 @@ import static io.netty.handler.codec.http.HttpUtil.*;
 
 import java.nio.charset.Charset;
 import java.util.Map;
+import java.util.Set;
 
 import com.liugeng.mthttp.constant.HttpMethod;
+import com.liugeng.mthttp.pojo.Cookies;
 import com.liugeng.mthttp.pojo.HttpRequestEntity;
 import com.liugeng.mthttp.pojo.HttpResponseEntity;
 import com.liugeng.mthttp.router.ConnectContext;
@@ -24,6 +26,9 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.QueryStringDecoder;
+import io.netty.handler.codec.http.cookie.Cookie;
+import io.netty.handler.codec.http.cookie.CookieDecoder;
+import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 
 @ChannelHandler.Sharable
 public class HttpDispatcherHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
@@ -58,11 +63,22 @@ public class HttpDispatcherHandler extends SimpleChannelInboundHandler<FullHttpR
 		HttpExecutorMappingInfo mappingInfo = new HttpExecutorMappingInfo(requestEntity.getPath(), requestEntity.getMethod());
 		HttpExecutor executor = getExecutor(mappingInfo);
 		Assert.executorExists(executor, mappingInfo.getPath());
+		handleCookies(connectContext);
 		executor.execute(connectContext);
 	}
 
 	private HttpExecutor getExecutor(HttpExecutorMappingInfo mappingInfo) {
 		return this.executorMap.get(mappingInfo);
+	}
+
+	private void handleCookies(ConnectContext connectContext) {
+		HttpHeaders httpHeaders = connectContext.getRequest().getHttpHeaders();
+		if (httpHeaders.contains("cookies")) {
+			ServerCookieDecoder cookieDecoder = ServerCookieDecoder.STRICT;
+			Set<Cookie> cookieSet = cookieDecoder.decode(httpHeaders.get(HttpHeaderNames.COOKIE));
+			Cookies cookies = new Cookies(cookieSet);
+			connectContext.addCookies(cookies);
+		}
 	}
 
 }

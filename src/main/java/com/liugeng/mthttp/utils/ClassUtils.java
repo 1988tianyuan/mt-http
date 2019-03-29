@@ -3,7 +3,6 @@ package com.liugeng.mthttp.utils;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
-//这个Util是Spring默认的ClassUtils
 public class ClassUtils {
     /**
      * 通过基本数据类型获取包装类型， for example: int.class -> Integer.class.
