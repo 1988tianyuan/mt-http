@@ -25,7 +25,7 @@ public class ExceptionCaughtHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        log.error(ctx.channel().id() + "出现异常：" + cause, cause);
+//        log.error(ctx.channel().id() + "出现异常：" + cause, cause);
         ConnectContext connectContext = new HttpConnectContext(createEmptyRequest(ctx.channel()));
         HttpResponseResolver responseResolver = new TextPlainResponseResolver();
         if (cause instanceof HttpRequestException) {
@@ -35,6 +35,7 @@ public class ExceptionCaughtHandler extends ChannelInboundHandlerAdapter {
             responseResolver.resolve("inner server error: " + cause.getMessage(), connectContext,
                 HttpResponseStatus.INTERNAL_SERVER_ERROR);
         }
+        ctx.channel().close();
     }
 
     private HttpRequestEntity createEmptyRequest(Channel channel) {
