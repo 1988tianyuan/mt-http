@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.ClassUtils;
+
 import com.liugeng.mthttp.exception.HttpRequestException;
 import com.liugeng.mthttp.pojo.HttpRequestEntity;
 import com.liugeng.mthttp.router.ConnectContext;
@@ -65,6 +67,14 @@ public class DefaultHttpExecutor implements HttpExecutor {
 
 	private Object convertArgType(Class<?> argClazz, Object argValue) {
 		try {
+			if (argValue == null) {
+				boolean isPrim = ClassUtils.isPrimitiveOrWrapper(argClazz);
+				if (isPrim) {
+					argValue = "0";
+				} else {
+					return null;
+				}
+			}
 			TypeConverter converter = new SimpleTypeConverter();
 			return converter.convertIfNecessary(argValue, argClazz);
 		} catch (Exception e) {

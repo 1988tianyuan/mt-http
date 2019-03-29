@@ -11,7 +11,7 @@ import com.liugeng.mthttp.router.annotation.HttpRouter;
 public class NewTestController {
 
 	@HttpRouter(path = {"/hi"}, method = HttpMethod.GET)
-	public String hello(String param, int i) {
+	public String hello(String param, double i) {
 		System.out.println(param);
 		System.out.println(i);
 		return "呵呵呵, 你传了一个数字过来：" + i;
