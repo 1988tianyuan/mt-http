@@ -4,7 +4,8 @@ import com.liugeng.mthttp.router.ConnectContext;
 
 import java.lang.reflect.Parameter;
 
-public class ReferenceTypeConverter extends TypeConverter {
+public class ResponseCookiesTypeConverter extends TypeConverter {
+
 
     @Override
     public Object convertIfNecessary(Parameter parameter, ConnectContext context) throws Exception {

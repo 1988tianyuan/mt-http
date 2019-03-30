@@ -1,10 +1,12 @@
 package com.liugeng.mthttp.utils.converter;
 
 import java.beans.PropertyEditor;
+import java.lang.reflect.Parameter;
 import java.util.HashMap;
 import java.util.Map;
 
 import com.liugeng.mthttp.exception.TypeMismatchException;
+import com.liugeng.mthttp.router.ConnectContext;
 import com.liugeng.mthttp.utils.ClassUtils;
 import com.liugeng.mthttp.utils.converter.propertyediors.CustomBooleanEditor;
 import com.liugeng.mthttp.utils.converter.propertyediors.CustomNumberEditor;
@@ -13,7 +15,7 @@ import com.liugeng.mthttp.utils.converter.propertyediors.CustomNumberEditor;
  * converter the origin Object(almost {@link String}) into target type
  * should not be reference type, just primitive type or String
  */
-public class PrimitiveTypeConverter implements TypeConverter {
+public class PrimitiveTypeConverter extends TypeConverter {
 
     private final Map<Class<?>, PropertyEditor> defaultEditors = new HashMap<>();
 
@@ -22,9 +24,13 @@ public class PrimitiveTypeConverter implements TypeConverter {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T> T convertIfNecessary(Object value, Class<T> requireType) throws Exception {
+    public Object convertIfNecessary(Parameter parameter, ConnectContext context) throws Exception {
+        Map<String, Object> origParams = getReqParams(context);
+        Class<?> requireType = parameter.getType();
+        String argName = parameter.getName();
+        Object value = origParams.get(argName);
         if (ClassUtils.isAssignableValue(requireType, value)) {
-            return (T)value;
+            return value;
         } else {
             boolean isPrim = org.apache.commons.lang3.ClassUtils.isPrimitiveOrWrapper(requireType);
             boolean isString = (value instanceof String);
@@ -42,7 +48,7 @@ public class PrimitiveTypeConverter implements TypeConverter {
                 } catch (IllegalArgumentException e) {
                     throw new TypeMismatchException(value, requireType);
                 }
-                return (T)editor.getValue();
+                return editor.getValue();
             }else {
                 throw new IllegalArgumentException("just support to convert String or primitive type, value: " + value +
                     " is not valid!");

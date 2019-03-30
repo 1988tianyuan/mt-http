@@ -1,11 +1,9 @@
 package com.liugeng.mthttp.pojo;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.Sets;
 import com.liugeng.mthttp.utils.Assert;
 import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
@@ -22,7 +20,7 @@ public class Cookies {
 		}
 	}
 
-	public Object getCookieValue(String cookieName) {
+	public String getCookieValue(String cookieName) {
 		Assert.notNull(cookieName, "cookie name should not be null!");
 		Cookie cookie = cookieMap.get(cookieName);
 		if (cookie != null) {

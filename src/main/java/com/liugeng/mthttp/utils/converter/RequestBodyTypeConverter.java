@@ -1,9 +1,13 @@
 package com.liugeng.mthttp.utils.converter;
 
-public class RequestBodyTypeConverter implements TypeConverter {
+import com.liugeng.mthttp.router.ConnectContext;
+
+import java.lang.reflect.Parameter;
+
+public class RequestBodyTypeConverter extends TypeConverter {
 
     @Override
-    public <T> T convertIfNecessary(Object value, Class<T> requireType) throws Exception {
+    public Object convertIfNecessary(Parameter parameter, ConnectContext context) throws Exception {
         return null;
     }
 }
