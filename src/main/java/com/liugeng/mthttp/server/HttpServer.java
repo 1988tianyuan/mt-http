@@ -4,24 +4,21 @@ import static com.liugeng.mthttp.constant.StringConstants.*;
 import static com.liugeng.mthttp.utils.ThrowingConsumerUtil.*;
 import static com.liugeng.mthttp.utils.asm.ClassMethodReadingVisitor.*;
 
-import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
 
-import org.objectweb.asm.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Maps;
 import com.liugeng.mthttp.constant.HttpMethod;
-import com.liugeng.mthttp.router.HttpExecutor;
+import com.liugeng.mthttp.router.executor.HttpExecutor;
 import com.liugeng.mthttp.router.annotation.HttpController;
 import com.liugeng.mthttp.router.annotation.HttpRouter;
-import com.liugeng.mthttp.router.support.DefaultHttpExecutor;
-import com.liugeng.mthttp.router.support.ExecutedMethodWrapper;
-import com.liugeng.mthttp.router.support.HttpExecutorMappingInfo;
+import com.liugeng.mthttp.router.executor.DefaultHttpExecutor;
+import com.liugeng.mthttp.router.ExecutedMethodWrapper;
+import com.liugeng.mthttp.router.HttpExecutorMappingInfo;
 import com.liugeng.mthttp.server.handler.ClientInitializer;
 import com.liugeng.mthttp.server.handler.HttpDispatcherHandler;
 import com.liugeng.mthttp.server.handler.ServerInitializer;
@@ -32,14 +29,11 @@ import com.liugeng.mthttp.utils.asm.AnnotationAttributes;
 import com.liugeng.mthttp.utils.asm.AnnotationMetadata;
 import com.liugeng.mthttp.utils.asm.ClassMetadata;
 import com.liugeng.mthttp.utils.asm.ClassMethodMetadata;
-import com.liugeng.mthttp.utils.asm.ClassMethodReadingVisitor;
 import com.liugeng.mthttp.utils.io.PackageResourceLoader;
 import com.liugeng.mthttp.utils.io.Resource;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.util.concurrent.Future;
-import lombok.extern.slf4j.Slf4j;
 
 public class HttpServer implements Server {
 

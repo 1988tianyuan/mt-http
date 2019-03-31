@@ -1,4 +1,4 @@
-package com.liugeng.mthttp.router.support;
+package com.liugeng.mthttp.router;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
 
@@ -29,6 +29,7 @@ public class HttpConnectContext implements ConnectContext {
 		this.response = new HttpResponseEntity();
 		this.requestCookies = new Cookies(Sets.newHashSet());
 		this.responseCookies = new Cookies(Sets.newHashSet());
+		this.response.setCookies(responseCookies);
 	}
 
 	@Override

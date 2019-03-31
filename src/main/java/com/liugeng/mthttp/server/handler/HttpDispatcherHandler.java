@@ -10,9 +10,9 @@ import com.liugeng.mthttp.constant.HttpMethod;
 import com.liugeng.mthttp.pojo.Cookies;
 import com.liugeng.mthttp.pojo.HttpRequestEntity;
 import com.liugeng.mthttp.router.ConnectContext;
-import com.liugeng.mthttp.router.support.HttpConnectContext;
-import com.liugeng.mthttp.router.HttpExecutor;
-import com.liugeng.mthttp.router.support.HttpExecutorMappingInfo;
+import com.liugeng.mthttp.router.HttpConnectContext;
+import com.liugeng.mthttp.router.executor.HttpExecutor;
+import com.liugeng.mthttp.router.HttpExecutorMappingInfo;
 import com.liugeng.mthttp.utils.Assert;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
@@ -68,7 +68,7 @@ public class HttpDispatcherHandler extends SimpleChannelInboundHandler<FullHttpR
 
 	private void handleCookies(ConnectContext connectContext) {
 		HttpHeaders httpHeaders = connectContext.getRequest().getHttpHeaders();
-		if (httpHeaders.contains("cookies")) {
+		if (httpHeaders.contains(HttpHeaderNames.COOKIE)) {
 			ServerCookieDecoder cookieDecoder = ServerCookieDecoder.STRICT;
 			Set<Cookie> cookieSet = cookieDecoder.decode(httpHeaders.get(HttpHeaderNames.COOKIE));
 			Cookies cookies = new Cookies(cookieSet);

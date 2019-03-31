@@ -1,20 +1,15 @@
-package com.liugeng.mthttp.router.support;
+package com.liugeng.mthttp.router.executor;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 
-import com.liugeng.mthttp.pojo.Cookies;
-import com.liugeng.mthttp.router.annotation.CookieValue;
-import com.liugeng.mthttp.router.annotation.HttpRequestBody;
-import org.apache.commons.lang3.ClassUtils;
+import com.liugeng.mthttp.router.ExecutedMethodWrapper;
+import com.liugeng.mthttp.router.resovler.TextPlainResponseResolver;
 
 import com.liugeng.mthttp.exception.HttpRequestException;
 import com.liugeng.mthttp.router.ConnectContext;
-import com.liugeng.mthttp.router.HttpResponseResolver;
+import com.liugeng.mthttp.router.resovler.HttpResponseResolver;
 import io.netty.handler.codec.http.HttpResponseStatus;
-
-import static com.liugeng.mthttp.router.support.AbstractHttpExecutor.ArgTypeToken.*;
 
 public class DefaultHttpExecutor extends AbstractHttpExecutor {
 

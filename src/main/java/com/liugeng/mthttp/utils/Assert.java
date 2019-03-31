@@ -1,7 +1,7 @@
 package com.liugeng.mthttp.utils;
 
 import com.liugeng.mthttp.exception.HttpRequestException;
-import com.liugeng.mthttp.router.HttpExecutor;
+import com.liugeng.mthttp.router.executor.HttpExecutor;
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class Assert {

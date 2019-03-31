@@ -1,8 +1,7 @@
-package com.liugeng.mthttp.router.support;
+package com.liugeng.mthttp.router.executor;
 
 import com.liugeng.mthttp.pojo.Cookies;
 import com.liugeng.mthttp.router.ConnectContext;
-import com.liugeng.mthttp.router.HttpExecutor;
 import com.liugeng.mthttp.router.annotation.CookieValue;
 import com.liugeng.mthttp.router.annotation.HttpRequestBody;
 import com.liugeng.mthttp.utils.converter.*;
@@ -11,11 +10,10 @@ import org.apache.commons.lang3.ClassUtils;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Parameter;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import static com.liugeng.mthttp.router.support.AbstractHttpExecutor.ArgTypeToken.*;
-import static com.liugeng.mthttp.router.support.AbstractHttpExecutor.ArgTypeToken.REFERENCE_TYPE;
+import static com.liugeng.mthttp.router.executor.AbstractHttpExecutor.ArgTypeToken.*;
+import static com.liugeng.mthttp.router.executor.AbstractHttpExecutor.ArgTypeToken.REFERENCE_TYPE;
 
 public abstract class AbstractHttpExecutor implements HttpExecutor {
 
@@ -40,8 +38,7 @@ public abstract class AbstractHttpExecutor implements HttpExecutor {
             }
         }
         if (ClassUtils.isPrimitiveOrWrapper(argType)
-                || ClassUtils.isAssignable(argType, String.class)
-                || ClassUtils.isAssignable(argType, Cookies.class)) {
+                || ClassUtils.isAssignable(argType, String.class)) {
             return PRIMITIVE_VALUE;
         }
         return REFERENCE_TYPE;

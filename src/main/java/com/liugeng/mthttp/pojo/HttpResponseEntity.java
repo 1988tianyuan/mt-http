@@ -12,6 +12,8 @@ public class HttpResponseEntity {
 
 	private HttpResponseStatus responseStatus = HttpResponseStatus.OK;
 
+	private Cookies cookies;
+
 	// default headers
 	private HttpHeaders responseHeaders = new CombinedHttpHeaders(true);
 
@@ -34,8 +36,16 @@ public class HttpResponseEntity {
 	public HttpHeaders getResponseHeaders() {
 		return responseHeaders;
 	}
-
 	public void setResponseHeaders(HttpHeaders responseHeaders) {
 		this.responseHeaders = responseHeaders;
+	}
+
+
+	public Cookies getCookies() {
+		return cookies;
+	}
+
+	public void setCookies(Cookies cookies) {
+		this.cookies = cookies;
 	}
 }
