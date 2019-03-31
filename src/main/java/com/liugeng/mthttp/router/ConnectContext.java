@@ -4,6 +4,7 @@ import com.liugeng.mthttp.constant.HttpMethod;
 import com.liugeng.mthttp.pojo.Cookies;
 import com.liugeng.mthttp.pojo.HttpRequestEntity;
 import com.liugeng.mthttp.pojo.HttpResponseEntity;
+import com.liugeng.mthttp.pojo.HttpSession;
 
 public interface ConnectContext {
 
@@ -31,5 +32,8 @@ public interface ConnectContext {
 
 	void setResponseCookies(Cookies requestCookies);
 
+	HttpSession getSession();
+
+	void setSession(HttpSession session);
 }
 

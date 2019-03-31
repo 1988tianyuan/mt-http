@@ -3,6 +3,7 @@ package com.liugeng.mthttp.router.resovler;
 import java.nio.charset.Charset;
 
 import com.liugeng.mthttp.pojo.HttpResponseEntity;
+import com.liugeng.mthttp.pojo.HttpSession;
 import com.liugeng.mthttp.router.ConnectContext;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;

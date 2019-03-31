@@ -3,6 +3,9 @@ package com.liugeng.mthttp.router.executor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 
+import com.liugeng.mthttp.constant.StringConstants;
+import com.liugeng.mthttp.pojo.Cookies;
+import com.liugeng.mthttp.pojo.HttpSession;
 import com.liugeng.mthttp.router.ExecutedMethodWrapper;
 import com.liugeng.mthttp.router.resovler.TextPlainResponseResolver;
 
@@ -10,6 +13,8 @@ import com.liugeng.mthttp.exception.HttpRequestException;
 import com.liugeng.mthttp.router.ConnectContext;
 import com.liugeng.mthttp.router.resovler.HttpResponseResolver;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.cookie.Cookie;
+import io.netty.handler.codec.http.cookie.DefaultCookie;
 
 public class DefaultHttpExecutor extends AbstractHttpExecutor {
 
@@ -28,7 +33,24 @@ public class DefaultHttpExecutor extends AbstractHttpExecutor {
 
 	private void createResponse(Object returnValue, ConnectContext context) {
 		HttpResponseResolver resolver = chooseRspResolver(returnValue, context);
+		setSessionId(context.getSession(), context.getResponseCookies());
 		resolver.resolve(returnValue, context, HttpResponseStatus.OK);
+	}
+
+	/**
+	 * save current session id into response cookies
+	 * @param session
+	 * @param responseCookies
+	 */
+	private void setSessionId(HttpSession session, Cookies responseCookies) {
+		String sessionId = session.getId();
+		Cookie cookie = new DefaultCookie(StringConstants.SESSION_ID, sessionId);
+		// todo, configurable session_id age
+		cookie.setMaxAge(3600000);
+		cookie.setPath("/");
+		// todo, configurable session_id domain
+		cookie.setDomain("local.com");
+		responseCookies.addCookie(cookie);
 	}
 
 	private HttpResponseResolver chooseRspResolver(Object returnValue, ConnectContext context) {

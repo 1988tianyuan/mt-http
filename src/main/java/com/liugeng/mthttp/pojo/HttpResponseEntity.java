@@ -1,10 +1,7 @@
 package com.liugeng.mthttp.pojo;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.handler.codec.http.CombinedHttpHeaders;
-import io.netty.handler.codec.http.HttpHeaders;
-import io.netty.handler.codec.http.HttpResponseStatus;
-import io.netty.handler.codec.http.HttpStatusClass;
+import io.netty.handler.codec.http.*;
 
 public class HttpResponseEntity {
 
@@ -15,7 +12,7 @@ public class HttpResponseEntity {
 	private Cookies cookies;
 
 	// default headers
-	private HttpHeaders responseHeaders = new CombinedHttpHeaders(true);
+	private HttpHeaders responseHeaders = new DefaultHttpHeaders();
 
 	public ByteBuf getBodyBuf() {
 		return bodyBuf;

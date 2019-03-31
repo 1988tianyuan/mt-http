@@ -2,14 +2,24 @@ package com.liugeng.mthttp.router.resovler;
 
 import com.liugeng.mthttp.pojo.Cookies;
 import com.liugeng.mthttp.pojo.HttpResponseEntity;
+import com.liugeng.mthttp.pojo.HttpSession;
 import com.liugeng.mthttp.router.ConnectContext;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.cookie.Cookie;
+import io.netty.handler.codec.http.cookie.CookieDecoder;
+import io.netty.handler.codec.http.cookie.CookieEncoder;
+import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
+
+import java.util.List;
 
 public abstract class AbstractResponseResolver implements HttpResponseResolver {
 
     protected FullHttpResponse createFullResponse(HttpResponseEntity responseEntity) {
         HttpHeaders headers = setCookieIfNecessary(responseEntity);
+        HttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
+                responseEntity.getResponseStatus(), responseEntity.getBodyBuf());
+        response.headers();
         return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
                 responseEntity.getResponseStatus(), responseEntity.getBodyBuf(), headers, headers);
     }
@@ -18,7 +28,9 @@ public abstract class AbstractResponseResolver implements HttpResponseResolver {
         Cookies cookies = responseEntity.getCookies();
         HttpHeaders httpHeaders = responseEntity.getResponseHeaders();
         if (cookies != null && !cookies.getCookieMap().isEmpty()) {
-            httpHeaders.set(HttpHeaderNames.SET_COOKIE, cookies.getCookieMap().values());
+            for (Cookie cookie : cookies.getCookieMap().values()) {
+                httpHeaders.add(HttpHeaderNames.SET_COOKIE, ServerCookieEncoder.STRICT.encode(cookie));
+            }
         }
         return httpHeaders;
     }

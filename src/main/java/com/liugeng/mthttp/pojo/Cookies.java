@@ -42,7 +42,7 @@ public class Cookies {
 		Cookie cookie = new DefaultCookie(key, value);
 		cookie.setMaxAge(30000);
 		cookie.setPath("/");
-		cookie.setDomain("localhost");
+		cookie.setDomain("local.com");
 		cookieMap.put(key, cookie);
 	}
 

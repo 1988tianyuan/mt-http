@@ -8,6 +8,7 @@ import com.liugeng.mthttp.constant.HttpMethod;
 import com.liugeng.mthttp.pojo.Cookies;
 import com.liugeng.mthttp.pojo.HttpRequestEntity;
 import com.liugeng.mthttp.pojo.HttpResponseEntity;
+import com.liugeng.mthttp.pojo.HttpSession;
 import com.liugeng.mthttp.router.ConnectContext;
 
 import java.awt.font.TextHitInfo;
@@ -23,6 +24,8 @@ public class HttpConnectContext implements ConnectContext {
 	private Cookies requestCookies;
 
 	private Cookies responseCookies;
+
+	private HttpSession session;
 
 	public HttpConnectContext(HttpRequestEntity request) {
 		this.request = request;
@@ -50,6 +53,16 @@ public class HttpConnectContext implements ConnectContext {
 	@Override
 	public void setResponseCookies(Cookies responseCookies) {
 		this.responseCookies = responseCookies;
+	}
+
+	@Override
+	public HttpSession getSession() {
+		return session;
+	}
+
+	@Override
+	public void setSession(HttpSession session) {
+		this.session = session;
 	}
 
 	@Override

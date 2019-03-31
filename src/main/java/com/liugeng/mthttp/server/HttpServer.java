@@ -7,7 +7,10 @@ import static com.liugeng.mthttp.utils.asm.ClassMethodReadingVisitor.*;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ThreadFactory;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import io.netty.channel.EventLoopGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,10 +64,12 @@ public class HttpServer implements Server {
 	@Override
 	public void start(final HttpServerCallback callback) {
 		try {
+			ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat("dispatcher-thread-%d").build();
+			EventLoopGroup eventExecutors = new NioEventLoopGroup(0, threadFactory);
 			bootstrap.group(bossGroup, workerGroup)
 				.channel(NioServerSocketChannel.class)
 				.handler(new ServerInitializer())
-				.childHandler(new ClientInitializer(prepareMvcEnv()));
+				.childHandler(new ClientInitializer(prepareMvcEnv(eventExecutors)));
 			bootstrap.bind(port)
 				.addListener(future -> {
 					if(future.isSuccess()){
@@ -88,8 +93,8 @@ public class HttpServer implements Server {
 		}
 	}
 
-	private HttpDispatcherHandler prepareMvcEnv() throws Exception {
-		return new HttpDispatcherHandler(retrievePackages("com.liugeng.mthttp.test"));
+	private HttpDispatcherHandler prepareMvcEnv(EventLoopGroup eventExecutors) throws Exception {
+		return new HttpDispatcherHandler(retrievePackages("com.liugeng.mthttp.test"), eventExecutors);
 	}
 
 	@Override
