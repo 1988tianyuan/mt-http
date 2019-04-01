@@ -9,6 +9,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.configuration2.PropertiesConfiguration;
+
+import com.liugeng.mthttp.config.Configurable;
 import com.liugeng.mthttp.constant.HttpMethod;
 import com.liugeng.mthttp.constant.StringConstants;
 import com.liugeng.mthttp.pojo.Cookies;
@@ -28,13 +31,15 @@ import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 
 @ChannelHandler.Sharable
-public class HttpDispatcherHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
+public class HttpDispatcherHandler extends SimpleChannelInboundHandler<FullHttpRequest> implements Configurable {
 
 	private final Map<HttpExecutorMappingInfo, HttpExecutor> executorMap;
 
 	private final Map<String, HttpSession> sessionMap;
 
 	private final EventLoopGroup eventExecutors;
+
+	private PropertiesConfiguration config;
 
 	public HttpDispatcherHandler(Map<HttpExecutorMappingInfo, HttpExecutor> executorMap, EventLoopGroup eventExecutors) {
 		this.executorMap = executorMap;
@@ -96,6 +101,7 @@ public class HttpDispatcherHandler extends SimpleChannelInboundHandler<FullHttpR
 	 * @param connectContext
 	 */
 	private void handleSession(ConnectContext connectContext) {
+		// todo, make session with multi kind of storage(like redis...)
 		Cookies cookies = connectContext.getRequestCookies();
 		String sessionId = cookies.getCookieValue(SESSION_ID);
 		HttpSession session;
@@ -112,8 +118,8 @@ public class HttpDispatcherHandler extends SimpleChannelInboundHandler<FullHttpR
 	}
 
 	private HttpSession createNewSession() {
-		// todo, make session parameters configurable
 		HttpSession session = new HttpSession();
+		session.setMaxInactiveInterval(config.getLong(SESSION_EXPIRE_TIME, 300000));
 		sessionMap.put(session.getId(), session);
 		return session;
 	}
@@ -123,6 +129,11 @@ public class HttpDispatcherHandler extends SimpleChannelInboundHandler<FullHttpR
 				new SessionRemoveTask(this.sessionMap),
 				60, 30, TimeUnit.SECONDS
 		);
+	}
+
+	@Override
+	public void config(PropertiesConfiguration config) {
+		this.config = config;
 	}
 
 	public EventLoopGroup getEventExecutors() {

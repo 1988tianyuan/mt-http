@@ -4,13 +4,19 @@ import static com.liugeng.mthttp.constant.StringConstants.*;
 import static com.liugeng.mthttp.utils.ThrowingConsumerUtil.*;
 import static com.liugeng.mthttp.utils.asm.ClassMethodReadingVisitor.*;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ThreadFactory;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.liugeng.mthttp.config.Configurable;
 import io.netty.channel.EventLoopGroup;
+
+import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,42 +44,44 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 
-public class HttpServer implements Server {
+public class HttpServer implements Server, Configurable {
 
 	private static final Logger log = LoggerFactory.getLogger(HttpServer.class);
 
-	private final NioEventLoopGroup workerGroup;
+	private NioEventLoopGroup workerGroup;
 
-	private final NioEventLoopGroup bossGroup;
+	private NioEventLoopGroup bossGroup;
 
-	private final ServerBootstrap bootstrap;
+	private NioEventLoopGroup dispatcherGroup;
+
+	private ServerBootstrap bootstrap;
 
 	private final int port;
 
-	public HttpServer(int port) {
-		this(port, 0, 0);
-	}
+	private volatile boolean started = false;
 
-	public HttpServer(int port, int bossThread, int workThread) {
-		bossGroup = new NioEventLoopGroup(bossThread);
-		workerGroup = new NioEventLoopGroup(workThread);
-		bootstrap = new ServerBootstrap();
+	private String scanPackage;
+
+	private PropertiesConfiguration config;
+
+	public HttpServer(int port) {
 		this.port = port;
 	}
 
 	@Override
 	public void start(final HttpServerCallback callback) {
 		try {
-			ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat("dispatcher-thread-%d").build();
-			EventLoopGroup eventExecutors = new NioEventLoopGroup(0, threadFactory);
+			if (isStarted()) throw new RuntimeException("http server is already started!");
 			bootstrap.group(bossGroup, workerGroup)
 				.channel(NioServerSocketChannel.class)
 				.handler(new ServerInitializer())
-				.childHandler(new ClientInitializer(prepareMvcEnv(eventExecutors)));
-			bootstrap.bind(port)
+				.childHandler(new ClientInitializer(prepareMvcEnv(dispatcherGroup)));
+			String host = prepareBingHost();
+			bootstrap.bind(host, port)
 				.addListener(future -> {
 					if(future.isSuccess()){
 						log.debug("bind port: {} successfully! server has been started!", port);
+						started = true;
 						callback.onSuccess();
 					}else {
 						callback.onError();
@@ -93,20 +101,46 @@ public class HttpServer implements Server {
 		}
 	}
 
+	private String prepareBingHost() {
+		String configHost;
+		try {
+			configHost = config.getString(SERVER_BIND_HOST);
+			if (StringUtils.isEmpty(configHost)) {
+				configHost = InetAddress.getLocalHost().getHostName();
+			}
+		} catch (UnknownHostException e) {
+			configHost = "0.0.0.0";
+		}
+		config.addProperty(SERVER_BIND_HOST, configHost);
+		return configHost;
+	}
+
 	private HttpDispatcherHandler prepareMvcEnv(EventLoopGroup eventExecutors) throws Exception {
-		return new HttpDispatcherHandler(retrievePackages("com.liugeng.mthttp.test"), eventExecutors);
+		try {
+			HttpDispatcherHandler handler = new HttpDispatcherHandler(retrievePackages(scanPackage), eventExecutors);
+			handler.config(this.config);
+			return handler;
+		} catch (Exception e) {
+			log.error("can't load the package: {}, please provide the correctly package name", scanPackage);
+			throw e;
+		}
 	}
 
 	@Override
 	public void stop() {
 		bossGroup.shutdownGracefully().syncUninterruptibly();
 		workerGroup.shutdownGracefully().syncUninterruptibly();
+		dispatcherGroup.shutdownGracefully().syncUninterruptibly();
 		bossGroup.terminationFuture().addListener(future -> {
 			log.debug("terminate bossGroup successfully.");
 			future.sync();
 		});
 		workerGroup.terminationFuture().addListener(future -> {
 			log.debug("terminate workerGroup successfully.");
+			future.sync();
+		});
+		dispatcherGroup.terminationFuture().addListener(future -> {
+			log.debug("terminate dispatcher eventLoop group successfully.");
 			future.sync();
 		});
 	}
@@ -125,12 +159,14 @@ public class HttpServer implements Server {
 				// resolve HttpRouter on class
 				Set<String> pathsOnClass = null;
 				if (classAnnotationMetadata.hasAnnotation(HttpRouter.class.getName())) {
-					pathsOnClass = classAnnotationMetadata.getAnnotationAttributes(HttpRouter.class.getName()).get(ROUTER_PATH);
+					pathsOnClass = classAnnotationMetadata.getAnnotationAttributes(HttpRouter.class.getName())
+						.getByDefault(ROUTER_PATH, Collections.singleton(""));
 				}
 				// resolve HttpRouter on method
 				resolveMethodRouter(pathsOnClass, classMethodMetadata, executorMap, classMetadata);
 			}
 		}
+
 		return executorMap;
 	}
 
@@ -149,14 +185,15 @@ public class HttpServer implements Server {
 	private void buildMappingInfo(MethodInfo methodInfo, Map<HttpExecutorMappingInfo, HttpExecutor> executorMap,
 		Set<String> pathsOnClass, ClassMethodMetadata methodMetadata, ClassMetadata classMetadata) throws Exception {
 		AnnotationAttributes methodAnnoAttr = methodMetadata.getMethodAnnotationAttr(methodInfo, HttpRouter.class.getName());
-		Set<String> pathsOnMethod = methodAnnoAttr.get(ROUTER_PATH);
-		HttpMethod httpMethod = HttpMethod.valueOf((String)methodAnnoAttr.get(ROUTER_METHOD).toArray()[0]);
+		Set<String> pathsOnMethod = methodAnnoAttr.getByDefault(ROUTER_PATH, Collections.singleton("/"));
+		HttpMethod httpMethod = HttpMethod.valueOf((String)methodAnnoAttr.getByDefault(ROUTER_METHOD,  Collections.singleton("GET")).toArray()[0]);
 		ExecutedMethodWrapper methodWrapper = genMethodWrapper(classMetadata.getClassName(), methodInfo);
 		HttpExecutor httpExecutor = new DefaultHttpExecutor(methodWrapper);
-		pathsOnClass = pathsOnClass == null ? Collections.singleton("") : pathsOnClass;
+		httpExecutor.config(config);
 		for (String path : pathsOnMethod) {
 			pathsOnClass.forEach(pathOnClass -> {
 				HttpExecutorMappingInfo mappingInfo = new HttpExecutorMappingInfo(pathOnClass + path, httpMethod);
+				log.info("resolved mappings: {}", mappingInfo);
 				executorMap.put(mappingInfo, httpExecutor);
 			});
 		}
@@ -183,5 +220,20 @@ public class HttpServer implements Server {
 		return methodWrapper;
 	}
 
+	@Override
+	public void config(PropertiesConfiguration config) {
+		bossGroup = new NioEventLoopGroup(config.getInt(SERVER_EVENTLOOP_BOSS_THREAD, 0));
+		workerGroup = new NioEventLoopGroup(config.getInt(SERVER_EVENTLOOP_WORKER_THREAD, 0));
+		bootstrap = new ServerBootstrap();
+		scanPackage = config.getString(HTTP_EXECUTOR_SCAN_PACKAGE);
 
+		ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat("dispatcher-thread-%d").build();
+		dispatcherGroup = new NioEventLoopGroup(config.getInt(DISPATCHER_EVENTLOOP_THREAD, 0), threadFactory);
+
+		this.config = config;
+	}
+
+	public boolean isStarted() {
+		return started;
+	}
 }

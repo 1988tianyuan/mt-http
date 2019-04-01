@@ -5,6 +5,8 @@ import com.liugeng.mthttp.router.ConnectContext;
 import com.liugeng.mthttp.router.annotation.CookieValue;
 import com.liugeng.mthttp.router.annotation.HttpRequestBody;
 import com.liugeng.mthttp.utils.converter.*;
+
+import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.lang3.ClassUtils;
 
 import java.lang.annotation.Annotation;
@@ -18,6 +20,8 @@ import static com.liugeng.mthttp.router.executor.AbstractHttpExecutor.ArgTypeTok
 public abstract class AbstractHttpExecutor implements HttpExecutor {
 
     private static final Map<AbstractHttpExecutor.ArgTypeToken, TypeConverter> converterMap = new HashMap<>();
+
+    protected PropertiesConfiguration config;
 
     static {
         converterMap.put(REQUEST_BODY, new RequestBodyTypeConverter());
@@ -52,5 +56,10 @@ public abstract class AbstractHttpExecutor implements HttpExecutor {
     public enum ArgTypeToken {
         REQUEST_BODY, RESPONSE_COOKIES, PRIMITIVE_VALUE,
         REQUEST_COOKIE, REFERENCE_TYPE
+    }
+
+    @Override
+    public void config(PropertiesConfiguration config) {
+        this.config = config;
     }
 }

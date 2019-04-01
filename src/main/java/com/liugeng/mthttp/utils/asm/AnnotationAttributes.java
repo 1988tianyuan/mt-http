@@ -18,4 +18,9 @@ public class AnnotationAttributes extends LinkedHashMap<String, Set<String>> {
         }
     }
 
+    public Set<String> getByDefault(String key, Set<String> defaultValue) {
+        Set<String> value = super.get(key);
+        return value != null ? value : defaultValue;
+    }
+
 }

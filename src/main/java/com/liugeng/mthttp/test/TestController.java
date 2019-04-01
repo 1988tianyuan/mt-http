@@ -11,7 +11,7 @@ import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 
 @HttpController
-@HttpRouter(path = {"/hello"})
+@HttpRouter
 public class TestController {
 
 	@HttpRouter(path = {"/hi"}, method = HttpMethod.GET)

@@ -1,6 +1,8 @@
 package com.liugeng.mthttp.server;
 
-public interface Server {
+import com.liugeng.mthttp.config.Configurable;
+
+public interface Server extends Configurable {
 
 	void start(HttpServerCallback callback);
 

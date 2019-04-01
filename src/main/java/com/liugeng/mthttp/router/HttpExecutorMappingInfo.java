@@ -46,4 +46,12 @@ public class HttpExecutorMappingInfo {
 	public int hashCode() {
 		return Objects.hash(path, method);
 	}
+
+	@Override
+	public String toString() {
+		return "HttpExecutorMappingInfo{" +
+			"path='" + path + '\'' +
+			", method=" + method +
+			'}';
+	}
 }
