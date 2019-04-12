@@ -45,10 +45,9 @@ public class DefaultHttpExecutor extends AbstractHttpExecutor {
 	private void setSessionId(HttpSession session, Cookies responseCookies) {
 		String sessionId = session.getId();
 		Cookie cookie = new DefaultCookie(StringConstants.SESSION_ID, sessionId);
-		cookie.setMaxAge(config.getLong(DEFAULT_COOKIE_EXPIRE_TIME, 1800000));
+		cookie.setMaxAge(config.getLong(DEFAULT_COOKIE_EXPIRE_TIME, 1800));
 		cookie.setPath("/");
-		// todo, configurable session_id domain
-		cookie.setDomain("local.com");
+		cookie.setDomain(config.getString(SERVER_BIND_HOST));
 		responseCookies.addCookie(cookie);
 	}
 
