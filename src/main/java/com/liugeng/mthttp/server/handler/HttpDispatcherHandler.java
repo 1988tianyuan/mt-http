@@ -4,6 +4,7 @@ import static io.netty.handler.codec.http.HttpUtil.*;
 import static com.liugeng.mthttp.constant.StringConstants.*;
 
 import java.nio.charset.Charset;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,6 +22,9 @@ import com.liugeng.mthttp.router.ConnectContext;
 import com.liugeng.mthttp.router.HttpConnectContext;
 import com.liugeng.mthttp.router.executor.HttpExecutor;
 import com.liugeng.mthttp.router.HttpExecutorMappingInfo;
+import com.liugeng.mthttp.router.mapping.HttpExecutorMapping;
+import com.liugeng.mthttp.router.mapping.MethodExecutorMappingInitializer;
+import com.liugeng.mthttp.router.mapping.ResourceExecutorMappingInitializer;
 import com.liugeng.mthttp.utils.Assert;
 import io.netty.channel.*;
 import io.netty.handler.codec.http.FullHttpRequest;
@@ -33,7 +37,9 @@ import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 @ChannelHandler.Sharable
 public class HttpDispatcherHandler extends SimpleChannelInboundHandler<FullHttpRequest> implements Configurable {
 
-	private final Map<HttpExecutorMappingInfo, HttpExecutor> executorMap;
+	private Map<HttpExecutorMappingInfo, HttpExecutor> executorMap;
+
+	private List<HttpExecutorMapping> mappingList;
 
 	private final Map<String, HttpSession> sessionMap;
 
@@ -41,11 +47,15 @@ public class HttpDispatcherHandler extends SimpleChannelInboundHandler<FullHttpR
 
 	private PropertiesConfiguration config;
 
+	public HttpDispatcherHandler(EventLoopGroup eventExecutors) {
+		this.sessionMap = new ConcurrentHashMap<>();
+		this.eventExecutors = eventExecutors;
+	}
+
 	public HttpDispatcherHandler(Map<HttpExecutorMappingInfo, HttpExecutor> executorMap, EventLoopGroup eventExecutors) {
 		this.executorMap = executorMap;
 		this.sessionMap = new ConcurrentHashMap<>();
 		this.eventExecutors = eventExecutors;
-		initSessionSchedule(this.eventExecutors);
 	}
 
 	@Override
@@ -124,16 +134,25 @@ public class HttpDispatcherHandler extends SimpleChannelInboundHandler<FullHttpR
 		return session;
 	}
 
-	private void initSessionSchedule(EventLoopGroup eventExecutors) {
-		eventExecutors.scheduleWithFixedDelay(
-				new SessionRemoveTask(this.sessionMap),
-				60, 30, TimeUnit.SECONDS
-		);
-	}
-
 	@Override
 	public void config(PropertiesConfiguration config) {
 		this.config = config;
+		initRequestMapping();
+		initSessionSchedule(this.eventExecutors);
+	}
+
+	private void initRequestMapping() {
+		MethodExecutorMappingInitializer memInitializer = new MethodExecutorMappingInitializer(config);
+		ResourceExecutorMappingInitializer remInitializer = new ResourceExecutorMappingInitializer(config);
+		mappingList.add(memInitializer.initMapping());
+		mappingList.add(remInitializer.initMapping());
+	}
+
+	private void initSessionSchedule(EventLoopGroup eventExecutors) {
+		eventExecutors.scheduleWithFixedDelay(
+			new SessionRemoveTask(this.sessionMap),
+			60, 30, TimeUnit.SECONDS
+		);
 	}
 
 	public EventLoopGroup getEventExecutors() {

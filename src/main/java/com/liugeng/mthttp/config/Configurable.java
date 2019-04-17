@@ -14,4 +14,5 @@ public interface Configurable {
 	String DEFAULT_COOKIE_EXPIRE_TIME = "http.cookie.default.expire.seconds";
 	String SERVER_BIND_HOST = "server.bind.host";
 	String SERVER_BIND_PORT = "server.bind.port";
+	String STATIC_FILE_PATH = "http.static.file.path";
 }

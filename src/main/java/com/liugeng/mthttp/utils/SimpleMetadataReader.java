@@ -10,6 +10,8 @@ import com.liugeng.mthttp.utils.asm.ClassMetaDataReadingVisitor;
 import com.liugeng.mthttp.utils.asm.ClassMetadata;
 import com.liugeng.mthttp.utils.asm.ClassMethodMetadata;
 import com.liugeng.mthttp.utils.io.Resource;
+
+import org.apache.commons.io.IOUtils;
 import org.objectweb.asm.ClassReader;
 
 /**

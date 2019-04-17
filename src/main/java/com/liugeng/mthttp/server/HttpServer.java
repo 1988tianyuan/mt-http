@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -60,7 +61,7 @@ public class HttpServer implements Server, Configurable {
 
 	private final int port;
 
-	private volatile boolean started = false;
+	private AtomicBoolean started = new AtomicBoolean(false);
 
 	private String scanPackage;
 
@@ -73,7 +74,7 @@ public class HttpServer implements Server, Configurable {
 	@Override
 	public void start(final HttpServerCallback callback) {
 		try {
-			if (isStarted()) throw new RuntimeException("http server is already started!");
+			if (isStarted()) return;
 			bootstrap.group(bossGroup, workerGroup)
 				.channel(NioServerSocketChannel.class)
 				.handler(new ServerInitializer())
@@ -83,9 +84,9 @@ public class HttpServer implements Server, Configurable {
 				.addListener(future -> {
 					if(future.isSuccess()){
 						log.debug("bind port: {} successfully! server has been started!", port);
-						started = true;
+						started.set(true);
 						callback.onSuccess();
-					}else {
+					} else {
 						callback.onError();
 					}
 				});
@@ -105,7 +106,7 @@ public class HttpServer implements Server, Configurable {
 
 	private HttpDispatcherHandler prepareMvcEnv(EventLoopGroup eventExecutors) throws Exception {
 		try {
-			HttpDispatcherHandler handler = new HttpDispatcherHandler(retrievePackages(scanPackage), eventExecutors);
+			HttpDispatcherHandler handler = new HttpDispatcherHandler(eventExecutors);
 			handler.config(this.config);
 			return handler;
 		} catch (Exception e) {
@@ -134,94 +135,13 @@ public class HttpServer implements Server, Configurable {
 	}
 
 
-	private Map<HttpExecutorMappingInfo, HttpExecutor> retrievePackages(String rootPackage) throws Exception {
-		PackageResourceLoader loader = new PackageResourceLoader();
-		Resource[] resources = loader.getResources(rootPackage);
-		Map<HttpExecutorMappingInfo, HttpExecutor> executorMap = Maps.newHashMap();
-		for (Resource resource : resources) {
-			if (isInnerClass(resource)) {
-				continue;
-			}
-			MetadataReader metadataReader = new SimpleMetadataReader(resource);
-			AnnotationMetadata classAnnotationMetadata = metadataReader.getAnnotationMetadata();
-			ClassMethodMetadata classMethodMetadata = metadataReader.getClassMethodMetadata();
-			ClassMetadata classMetadata = metadataReader.getClassMetadata();
-			if (classAnnotationMetadata.hasAnnotation(HttpController.class.getName())) {
-				// resolve HttpRouter on class
-				Set<String> pathsOnClass = null;
-				if (classAnnotationMetadata.hasAnnotation(HttpRouter.class.getName())) {
-					pathsOnClass = classAnnotationMetadata.getAnnotationAttributes(HttpRouter.class.getName())
-						.getByDefault(ROUTER_PATH, Collections.singleton(""));
-				}
-				// resolve HttpRouter on method
-				resolveMethodRouter(pathsOnClass, classMethodMetadata, executorMap, classMetadata);
-			}
-		}
 
-		return executorMap;
-	}
-
-	private boolean isInnerClass(Resource resource) {
-		String path = resource.getDescription();
-		return Pattern.matches(".*\\$.*\\.class", path);
-	}
-
-	private void resolveMethodRouter(Set<String> pathsOnClass, ClassMethodMetadata methodMetadata,
-		Map<HttpExecutorMappingInfo, HttpExecutor> executorMap, ClassMetadata classMetadata) {
-		methodMetadata.getMethodInfoSet()
-			.stream()
-			.filter(methodInfo -> methodMetadata.checkMethodAnnotationAbsent(methodInfo, HttpRouter.class.getName()))
-			.forEach(
-				throwingConsumerWrapper(
-					methodInfo -> buildMappingInfo(methodInfo, executorMap, pathsOnClass, methodMetadata, classMetadata)
-				)
-			);
-	}
-
-	private void buildMappingInfo(MethodInfo methodInfo, Map<HttpExecutorMappingInfo, HttpExecutor> executorMap,
-		Set<String> pathsOnClass, ClassMethodMetadata methodMetadata, ClassMetadata classMetadata) throws Exception {
-		AnnotationAttributes methodAnnoAttr = methodMetadata.getMethodAnnotationAttr(methodInfo, HttpRouter.class.getName());
-		Set<String> pathsOnMethod = methodAnnoAttr.getByDefault(ROUTER_PATH, Collections.singleton("/"));
-		HttpMethod httpMethod = HttpMethod.valueOf((String)methodAnnoAttr.getByDefault(ROUTER_METHOD,  Collections.singleton("GET")).toArray()[0]);
-		ExecutedMethodWrapper methodWrapper = genMethodWrapper(classMetadata.getClassName(), methodInfo);
-		HttpExecutor httpExecutor = new DefaultHttpExecutor(methodWrapper);
-		httpExecutor.config(config);
-		for (String path : pathsOnMethod) {
-			pathsOnClass.forEach(pathOnClass -> {
-				HttpExecutorMappingInfo mappingInfo = new HttpExecutorMappingInfo(pathOnClass + path, httpMethod);
-				log.info("resolved mappings: {}", mappingInfo);
-				executorMap.put(mappingInfo, httpExecutor);
-			});
-		}
-	}
-
-	private ExecutedMethodWrapper genMethodWrapper(String clazzName, MethodInfo methodInfo) throws Exception {
-		String[] types = methodInfo.getArgTypes();
-		Class<?>[] paramArgClazzs = new Class[0];
-		// resolve method parameters type
-		if (types != null && types.length > 0) {
-			paramArgClazzs = new Class[types.length];
-			for (int i = 0; i < types.length; i++) {
-				Class<?> paramArgClazz = ClassUtils.parseType(types[i]);
-				paramArgClazzs[i] = paramArgClazz;
-			}
-		}
-		// resolve class type
-		Class<?> clazz = ClassUtils.parseType(clazzName);
-		ExecutedMethodWrapper methodWrapper = new ExecutedMethodWrapper();
-		methodWrapper.setUserClass(clazz);
-		methodWrapper.setUserObject(clazz.newInstance());
-		methodWrapper.setUserMethod(clazz.getMethod(methodInfo.getMethodName(), paramArgClazzs));
-		methodWrapper.setParameters(methodWrapper.getUserMethod().getParameters());
-		return methodWrapper;
-	}
 
 	@Override
 	public void config(PropertiesConfiguration config) {
 		bossGroup = new NioEventLoopGroup(config.getInt(SERVER_EVENTLOOP_BOSS_THREAD, 0));
 		workerGroup = new NioEventLoopGroup(config.getInt(SERVER_EVENTLOOP_WORKER_THREAD, 0));
 		bootstrap = new ServerBootstrap();
-		scanPackage = config.getString(HTTP_EXECUTOR_SCAN_PACKAGE, "");
 
 		ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat("dispatcher-thread-%d").build();
 		dispatcherGroup = new NioEventLoopGroup(config.getInt(DISPATCHER_EVENTLOOP_THREAD, 0), threadFactory);
@@ -230,6 +150,6 @@ public class HttpServer implements Server, Configurable {
 	}
 
 	public boolean isStarted() {
-		return started;
+		return started.get();
 	}
 }

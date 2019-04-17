@@ -47,7 +47,6 @@ public class Main {
 		} finally {
 			startingLock.unlock();
 		}
-		final Server finalServer = server;
 		server.start(new HttpServerCallback() {
 			@Override
 			public void onSuccess() {
@@ -55,7 +54,7 @@ public class Main {
 			}
 			@Override
 			public void onError() {
-				finalServer.stop();
+
 			}
 		});
 	}
