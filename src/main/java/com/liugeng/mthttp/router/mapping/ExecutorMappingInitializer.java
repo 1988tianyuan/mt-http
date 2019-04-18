@@ -17,5 +17,5 @@ public abstract class ExecutorMappingInitializer implements Configurable {
 		this.config = config;
 	}
 
-	public abstract HttpExecutorMapping initMapping();
+	public abstract HttpExecutorMapping initMapping() throws Exception;
 }

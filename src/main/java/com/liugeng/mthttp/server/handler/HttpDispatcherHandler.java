@@ -4,6 +4,7 @@ import static io.netty.handler.codec.http.HttpUtil.*;
 import static com.liugeng.mthttp.constant.StringConstants.*;
 
 import java.nio.charset.Charset;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -15,6 +16,7 @@ import org.apache.commons.configuration2.PropertiesConfiguration;
 import com.liugeng.mthttp.config.Configurable;
 import com.liugeng.mthttp.constant.HttpMethod;
 import com.liugeng.mthttp.constant.StringConstants;
+import com.liugeng.mthttp.exception.HttpRequestException;
 import com.liugeng.mthttp.pojo.Cookies;
 import com.liugeng.mthttp.pojo.HttpRequestEntity;
 import com.liugeng.mthttp.pojo.HttpSession;
@@ -30,6 +32,7 @@ import io.netty.channel.*;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
@@ -37,9 +40,7 @@ import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 @ChannelHandler.Sharable
 public class HttpDispatcherHandler extends SimpleChannelInboundHandler<FullHttpRequest> implements Configurable {
 
-	private Map<HttpExecutorMappingInfo, HttpExecutor> executorMap;
-
-	private List<HttpExecutorMapping> mappingList;
+	private final List<HttpExecutorMapping> mappingList;
 
 	private final Map<String, HttpSession> sessionMap;
 
@@ -50,12 +51,7 @@ public class HttpDispatcherHandler extends SimpleChannelInboundHandler<FullHttpR
 	public HttpDispatcherHandler(EventLoopGroup eventExecutors) {
 		this.sessionMap = new ConcurrentHashMap<>();
 		this.eventExecutors = eventExecutors;
-	}
-
-	public HttpDispatcherHandler(Map<HttpExecutorMappingInfo, HttpExecutor> executorMap, EventLoopGroup eventExecutors) {
-		this.executorMap = executorMap;
-		this.sessionMap = new ConcurrentHashMap<>();
-		this.eventExecutors = eventExecutors;
+		this.mappingList = new LinkedList<>();
 	}
 
 	@Override
@@ -79,16 +75,21 @@ public class HttpDispatcherHandler extends SimpleChannelInboundHandler<FullHttpR
 
 	private void dispatch(ConnectContext connectContext) throws Exception {
 		HttpRequestEntity requestEntity = connectContext.getRequest();
-		HttpExecutorMappingInfo mappingInfo = new HttpExecutorMappingInfo(requestEntity.getPath(), requestEntity.getMethod());
-		HttpExecutor executor = getExecutor(mappingInfo);
-		Assert.executorExists(executor, mappingInfo.getPath());
+		HttpExecutor executor = getExecutor(requestEntity);
+		Assert.executorExists(executor, requestEntity.getPath());
 		handleCookies(connectContext);
 		handleSession(connectContext);
 		executor.execute(connectContext);
 	}
 
-	private HttpExecutor getExecutor(HttpExecutorMappingInfo mappingInfo) {
-		return this.executorMap.get(mappingInfo);
+	private HttpExecutor getExecutor(HttpRequestEntity requestEntity) {
+		for (HttpExecutorMapping mapping : mappingList) {
+			HttpExecutor executor = mapping.getExecutor(requestEntity);
+			if (executor != null) {
+				return executor;
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -135,17 +136,17 @@ public class HttpDispatcherHandler extends SimpleChannelInboundHandler<FullHttpR
 	}
 
 	@Override
-	public void config(PropertiesConfiguration config) {
+	public void config(PropertiesConfiguration config) throws Exception {
 		this.config = config;
 		initRequestMapping();
 		initSessionSchedule(this.eventExecutors);
 	}
 
-	private void initRequestMapping() {
+	private void initRequestMapping() throws Exception {
 		MethodExecutorMappingInitializer memInitializer = new MethodExecutorMappingInitializer(config);
 		ResourceExecutorMappingInitializer remInitializer = new ResourceExecutorMappingInitializer(config);
 		mappingList.add(memInitializer.initMapping());
-		mappingList.add(remInitializer.initMapping());
+//		mappingList.add(remInitializer.initMapping());
 	}
 
 	private void initSessionSchedule(EventLoopGroup eventExecutors) {

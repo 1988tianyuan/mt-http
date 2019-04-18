@@ -4,7 +4,7 @@ import org.apache.commons.configuration2.PropertiesConfiguration;
 
 public interface Configurable {
 
-	void config(PropertiesConfiguration config);
+	void config(PropertiesConfiguration config) throws Exception;
 
 	String SERVER_EVENTLOOP_BOSS_THREAD = "server.eventLoop.boss.thread.num";
 	String SERVER_EVENTLOOP_WORKER_THREAD = "server.eventLoop.worker.thread.num";

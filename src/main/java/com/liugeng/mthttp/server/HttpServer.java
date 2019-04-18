@@ -105,14 +105,9 @@ public class HttpServer implements Server, Configurable {
 	}
 
 	private HttpDispatcherHandler prepareMvcEnv(EventLoopGroup eventExecutors) throws Exception {
-		try {
-			HttpDispatcherHandler handler = new HttpDispatcherHandler(eventExecutors);
-			handler.config(this.config);
-			return handler;
-		} catch (Exception e) {
-			log.error("can't load the package: {}, please provide the correctly package name", scanPackage);
-			throw e;
-		}
+		HttpDispatcherHandler handler = new HttpDispatcherHandler(eventExecutors);
+		handler.config(this.config);
+		return handler;
 	}
 
 	@Override
@@ -133,9 +128,6 @@ public class HttpServer implements Server, Configurable {
 			log.debug("terminate dispatcher eventLoop group successfully.");
 		});
 	}
-
-
-
 
 	@Override
 	public void config(PropertiesConfiguration config) {

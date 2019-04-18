@@ -43,13 +43,14 @@ public class MethodExecutorMappingInitializer extends ExecutorMappingInitializer
 	}
 
 	@Override
-	public HttpExecutorMapping initMapping() {
+	public HttpExecutorMapping initMapping() throws Exception {
 		try {
 			Map<HttpExecutorMappingInfo, HttpExecutor> executorMap = retrievePackages(rootPackage);
+			return new MethodHttpExecutorMapping(executorMap);
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.error("can't load the package: {}, please provide the correctly package name", rootPackage);
+			throw e;
 		}
-		return null;
 	}
 
 	private Map<HttpExecutorMappingInfo, HttpExecutor> retrievePackages(String rootPackage) throws Exception {
