@@ -6,6 +6,6 @@ import io.netty.buffer.ByteBuf;
 
 public interface SerializationStrategy {
 
-	ByteBuf serialize(Object response, Charset charset);
+	ByteBuf serialize(Object response, Charset charset) throws Exception;
 
 }

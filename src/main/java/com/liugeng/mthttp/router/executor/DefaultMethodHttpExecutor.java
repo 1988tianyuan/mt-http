@@ -33,7 +33,7 @@ public class DefaultMethodHttpExecutor extends AbstractHttpExecutor {
 		createResponse(returnValue, context);
 	}
 
-	private void createResponse(Object returnValue, ConnectContext context) {
+	private void createResponse(Object returnValue, ConnectContext context) throws Exception {
 		HttpResponseResolver resolver = chooseRspResolver(returnValue, context);
 		setSessionId(context.getSession(), context.getResponseCookies());
 		// todo

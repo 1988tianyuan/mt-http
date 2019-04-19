@@ -29,6 +29,7 @@ public class HttpConnectContext implements ConnectContext {
 
 	public HttpConnectContext(HttpRequestEntity request) {
 		this.request = request;
+		this.httpMethod = request.getMethod();
 		this.response = new HttpResponseEntity();
 		this.requestCookies = new Cookies(Sets.newHashSet());
 		this.responseCookies = new Cookies(Sets.newHashSet());

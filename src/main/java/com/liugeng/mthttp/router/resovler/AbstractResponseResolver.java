@@ -67,7 +67,7 @@ public abstract class AbstractResponseResolver implements HttpResponseResolver {
         }
     }
 
-    public void resolve(Object returnValue, ConnectContext context, HttpResponseStatus status) {
+    public void resolve(Object returnValue, ConnectContext context, HttpResponseStatus status) throws Exception {
         HttpHeaders requestHeaders = context.getRequest().getHttpHeaders();
         HttpHeaders responseHeaders = context.getResponse().getResponseHeaders();
         SerializationStrategy strategy = genSerialStrategy(returnValue, requestHeaders.get(ACCEPT), responseHeaders.get(CONTENT_TYPE));

@@ -13,6 +13,8 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.handler.codec.http.DefaultHttpHeaders;
+import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 @ChannelHandler.Sharable
@@ -25,22 +27,27 @@ public class ExceptionCaughtHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         log.error(ctx.channel().id() + "出现异常：" + cause, cause);
-        ConnectContext connectContext = new HttpConnectContext(createEmptyRequest(ctx.channel()));
+        ConnectContext connectContext = new HttpConnectContext(createTmpRequest(ctx.channel()));
         HttpResponseResolver responseResolver = new TextPlainResponseResolver();
-        if (cause instanceof HttpRequestException) {
-            HttpRequestException hrException = (HttpRequestException) cause;
-            responseResolver.resolve(cause.getMessage(), connectContext, hrException.getHttpStatus());
-        } else {
-            responseResolver.resolve("inner server error: " + cause.getMessage(), connectContext,
-                HttpResponseStatus.INTERNAL_SERVER_ERROR);
+        try {
+            if (cause instanceof HttpRequestException) {
+                HttpRequestException hrException = (HttpRequestException) cause;
+                responseResolver.resolve(cause.getMessage(), connectContext, hrException.getHttpStatus());
+            } else {
+                responseResolver.resolve("inner server error: " + cause.getMessage(), connectContext,
+                    HttpResponseStatus.INTERNAL_SERVER_ERROR);
+            }
+        } catch (Exception e) {
+
         }
         ctx.channel().close();
     }
 
-    private HttpRequestEntity createEmptyRequest(Channel channel) {
+    private HttpRequestEntity createTmpRequest(Channel channel) {
         return new HttpRequestEntity()
             .builder()
             .channel(channel)
+            .httpHeaders(new DefaultHttpHeaders())
             .build();
     }
 }
