@@ -3,6 +3,7 @@ package com.liugeng.mthttp.router.resovler;
 import static com.google.common.net.HttpHeaders.*;
 import static io.netty.handler.codec.http.HttpHeaderValues.*;
 
+import com.liugeng.mthttp.exception.HttpRequestException;
 import com.liugeng.mthttp.pojo.Cookies;
 import com.liugeng.mthttp.pojo.HttpResponseEntity;
 import com.liugeng.mthttp.router.ConnectContext;
@@ -67,12 +68,16 @@ public abstract class AbstractResponseResolver implements HttpResponseResolver {
         }
     }
 
-    public void resolve(Object returnValue, ConnectContext context, HttpResponseStatus status) throws Exception {
+    public void resolve(Object returnValue, ConnectContext context, HttpResponseStatus status) {
         HttpHeaders requestHeaders = context.getRequest().getHttpHeaders();
         HttpHeaders responseHeaders = context.getResponse().getResponseHeaders();
         SerializationStrategy strategy = genSerialStrategy(returnValue, requestHeaders.get(ACCEPT), responseHeaders.get(CONTENT_TYPE));
-        ByteBuf byteBuf = strategy.serialize(returnValue, getCharset(responseHeaders));
-        resolveByteBuf(byteBuf, context, status);
+        try {
+            ByteBuf byteBuf = strategy.serialize(returnValue, getCharset(responseHeaders));
+            resolveByteBuf(byteBuf, context, status);
+        } catch (Exception e) {
+            throw new HttpRequestException("error during resolve the resource: " + context.getRequest().getPath(), e, HttpResponseStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     private Charset getCharset(HttpHeaders responseHeaders) {

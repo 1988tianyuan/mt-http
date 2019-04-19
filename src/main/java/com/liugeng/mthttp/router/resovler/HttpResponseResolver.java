@@ -6,5 +6,5 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 
 public interface HttpResponseResolver {
 
-	void resolve(Object returnValue, ConnectContext context, HttpResponseStatus status) throws Exception;
+	void resolve(Object returnValue, ConnectContext context, HttpResponseStatus status);
 }

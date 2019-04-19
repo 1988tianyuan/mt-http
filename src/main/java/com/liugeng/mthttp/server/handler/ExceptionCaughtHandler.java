@@ -29,16 +29,12 @@ public class ExceptionCaughtHandler extends ChannelInboundHandlerAdapter {
         log.error(ctx.channel().id() + "出现异常：" + cause, cause);
         ConnectContext connectContext = new HttpConnectContext(createTmpRequest(ctx.channel()));
         HttpResponseResolver responseResolver = new TextPlainResponseResolver();
-        try {
-            if (cause instanceof HttpRequestException) {
-                HttpRequestException hrException = (HttpRequestException) cause;
-                responseResolver.resolve(cause.getMessage(), connectContext, hrException.getHttpStatus());
-            } else {
-                responseResolver.resolve("inner server error: " + cause.getMessage(), connectContext,
-                    HttpResponseStatus.INTERNAL_SERVER_ERROR);
-            }
-        } catch (Exception e) {
-
+        if (cause instanceof HttpRequestException) {
+            HttpRequestException hrException = (HttpRequestException) cause;
+            responseResolver.resolve(cause.getMessage(), connectContext, hrException.getHttpStatus());
+        } else {
+            responseResolver.resolve("inner server error: " + cause.getMessage(), connectContext,
+                HttpResponseStatus.INTERNAL_SERVER_ERROR);
         }
         ctx.channel().close();
     }

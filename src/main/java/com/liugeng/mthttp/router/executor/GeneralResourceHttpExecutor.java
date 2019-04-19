@@ -27,7 +27,7 @@ public class GeneralResourceHttpExecutor implements HttpExecutor {
 	}
 
 	@Override
-	public void execute(ConnectContext context) throws Exception {
+	public void execute(ConnectContext context) {
 		String requestPath = context.getRequest().getPath();
 		String requestUri = genRealUri(requestPath);
 		Resource resource = null;
