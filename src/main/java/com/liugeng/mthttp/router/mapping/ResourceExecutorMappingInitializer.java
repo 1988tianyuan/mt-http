@@ -2,8 +2,6 @@ package com.liugeng.mthttp.router.mapping;
 
 import org.apache.commons.configuration2.PropertiesConfiguration;
 
-import com.liugeng.mthttp.router.executor.DefaultResourceHttpExecutor;
-
 public class ResourceExecutorMappingInitializer extends ExecutorMappingInitializer {
 
 	private String staticPath;

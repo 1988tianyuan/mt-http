@@ -12,6 +12,8 @@ import com.liugeng.mthttp.router.resovler.TextPlainResponseResolver;
 import com.liugeng.mthttp.exception.HttpRequestException;
 import com.liugeng.mthttp.router.ConnectContext;
 import com.liugeng.mthttp.router.resovler.HttpResponseResolver;
+import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
@@ -34,6 +36,8 @@ public class DefaultMethodHttpExecutor extends AbstractHttpExecutor {
 	private void createResponse(Object returnValue, ConnectContext context) {
 		HttpResponseResolver resolver = chooseRspResolver(returnValue, context);
 		setSessionId(context.getSession(), context.getResponseCookies());
+		// todo
+		context.getResponse().getResponseHeaders().set(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN);
 		resolver.resolve(returnValue, context, HttpResponseStatus.OK);
 	}
 

@@ -8,5 +8,5 @@ public enum HttpMethod {
 	OPTIONS,
 	HEAD,
 	PATCH,
-	CONNECT;
+	CONNECT
 }
