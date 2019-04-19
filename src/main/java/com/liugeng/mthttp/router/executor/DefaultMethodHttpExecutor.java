@@ -16,11 +16,11 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 
-public class DefaultHttpExecutor extends AbstractHttpExecutor {
+public class DefaultMethodHttpExecutor extends AbstractHttpExecutor {
 
 	private ExecutedMethodWrapper userMethod;
 
-	public DefaultHttpExecutor(ExecutedMethodWrapper userMethod) {
+	public DefaultMethodHttpExecutor(ExecutedMethodWrapper userMethod) {
 		this.userMethod = userMethod;
 	}
 

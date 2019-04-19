@@ -146,7 +146,7 @@ public class HttpDispatcherHandler extends SimpleChannelInboundHandler<FullHttpR
 		MethodExecutorMappingInitializer memInitializer = new MethodExecutorMappingInitializer(config);
 		ResourceExecutorMappingInitializer remInitializer = new ResourceExecutorMappingInitializer(config);
 		mappingList.add(memInitializer.initMapping());
-//		mappingList.add(remInitializer.initMapping());
+		mappingList.add(remInitializer.initMapping());
 	}
 
 	private void initSessionSchedule(EventLoopGroup eventExecutors) {

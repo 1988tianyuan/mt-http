@@ -18,7 +18,7 @@ import com.liugeng.mthttp.router.ExecutedMethodWrapper;
 import com.liugeng.mthttp.router.HttpExecutorMappingInfo;
 import com.liugeng.mthttp.router.annotation.HttpController;
 import com.liugeng.mthttp.router.annotation.HttpRouter;
-import com.liugeng.mthttp.router.executor.DefaultHttpExecutor;
+import com.liugeng.mthttp.router.executor.DefaultMethodHttpExecutor;
 import com.liugeng.mthttp.router.executor.HttpExecutor;
 import com.liugeng.mthttp.utils.ClassUtils;
 import com.liugeng.mthttp.utils.MetadataReader;
@@ -48,7 +48,7 @@ public class MethodExecutorMappingInitializer extends ExecutorMappingInitializer
 			Map<HttpExecutorMappingInfo, HttpExecutor> executorMap = retrievePackages(rootPackage);
 			return new MethodHttpExecutorMapping(executorMap);
 		} catch (Exception e) {
-			log.error("can't load the package: {}, please provide the correctly package name", rootPackage);
+			log.error("can't load the package: {}, please provide the correct package name", rootPackage);
 			throw e;
 		}
 	}
@@ -103,7 +103,7 @@ public class MethodExecutorMappingInitializer extends ExecutorMappingInitializer
 		Set<String> pathsOnMethod = methodAnnoAttr.getByDefault(ROUTER_PATH, Collections.singleton("/"));
 		HttpMethod httpMethod = HttpMethod.valueOf((String)methodAnnoAttr.getByDefault(ROUTER_METHOD,  Collections.singleton("GET")).toArray()[0]);
 		ExecutedMethodWrapper methodWrapper = genMethodWrapper(classMetadata.getClassName(), methodInfo);
-		HttpExecutor httpExecutor = new DefaultHttpExecutor(methodWrapper);
+		HttpExecutor httpExecutor = new DefaultMethodHttpExecutor(methodWrapper);
 		httpExecutor.config(config);
 		for (String path : pathsOnMethod) {
 			pathsOnClass.forEach(pathOnClass -> {

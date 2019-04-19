@@ -1,53 +1,23 @@
 package com.liugeng.mthttp.server;
 
-import static com.liugeng.mthttp.constant.StringConstants.*;
-import static com.liugeng.mthttp.utils.ThrowingConsumerUtil.*;
-import static com.liugeng.mthttp.utils.asm.ClassMethodReadingVisitor.*;
-
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.regex.Pattern;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.liugeng.mthttp.config.Configurable;
 import io.netty.channel.EventLoopGroup;
 
 import org.apache.commons.configuration2.PropertiesConfiguration;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Maps;
-import com.liugeng.mthttp.constant.HttpMethod;
-import com.liugeng.mthttp.router.executor.HttpExecutor;
-import com.liugeng.mthttp.router.annotation.HttpController;
-import com.liugeng.mthttp.router.annotation.HttpRouter;
-import com.liugeng.mthttp.router.executor.DefaultHttpExecutor;
-import com.liugeng.mthttp.router.ExecutedMethodWrapper;
-import com.liugeng.mthttp.router.HttpExecutorMappingInfo;
 import com.liugeng.mthttp.server.handler.ClientInitializer;
 import com.liugeng.mthttp.server.handler.HttpDispatcherHandler;
 import com.liugeng.mthttp.server.handler.ServerInitializer;
-import com.liugeng.mthttp.utils.ClassUtils;
-import com.liugeng.mthttp.utils.MetadataReader;
-import com.liugeng.mthttp.utils.SimpleMetadataReader;
-import com.liugeng.mthttp.utils.asm.AnnotationAttributes;
-import com.liugeng.mthttp.utils.asm.AnnotationMetadata;
-import com.liugeng.mthttp.utils.asm.ClassMetadata;
-import com.liugeng.mthttp.utils.asm.ClassMethodMetadata;
-import com.liugeng.mthttp.utils.io.PackageResourceLoader;
-import com.liugeng.mthttp.utils.io.Resource;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 
-public class HttpServer implements Server, Configurable {
+public class HttpServer implements Server {
 
 	private static final Logger log = LoggerFactory.getLogger(HttpServer.class);
 
