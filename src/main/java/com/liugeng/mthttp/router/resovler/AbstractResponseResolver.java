@@ -1,46 +1,42 @@
 package com.liugeng.mthttp.router.resovler;
 
 import static com.google.common.net.HttpHeaders.*;
-import static io.netty.handler.codec.http.HttpHeaderValues.*;
 
 import com.liugeng.mthttp.exception.HttpRequestException;
 import com.liugeng.mthttp.pojo.Cookies;
 import com.liugeng.mthttp.pojo.HttpResponseEntity;
 import com.liugeng.mthttp.router.ConnectContext;
-import com.liugeng.mthttp.router.resovler.serialization.ApplicationStrategy;
-import com.liugeng.mthttp.router.resovler.serialization.JsonStrategy;
 import com.liugeng.mthttp.router.resovler.serialization.SerializationStrategy;
-import com.liugeng.mthttp.router.resovler.serialization.StaticeFileStrategy;
-import com.liugeng.mthttp.router.resovler.serialization.TextStrategy;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
 
-import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
-import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.lang3.ClassUtils;
-import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 
 public abstract class AbstractResponseResolver implements HttpResponseResolver {
 
-    protected final Map<String, SerializationStrategy> streamSerialStrategyMap;
-    protected final Map<String, SerializationStrategy> objectSerialStrategyMap;
+    protected final Map<String, SerializationStrategy> serialStrategyMap;
 
     public AbstractResponseResolver() {
-        streamSerialStrategyMap = new HashMap<>();
-        objectSerialStrategyMap = new HashMap<>();
-        objectSerialStrategyMap.put(APPLICATION_JSON.toString(), new JsonStrategy());
-        objectSerialStrategyMap.put("text", new TextStrategy());
-        streamSerialStrategyMap.put("application", new ApplicationStrategy());
-        streamSerialStrategyMap.put("*", new StaticeFileStrategy());
+        this.serialStrategyMap = initSerialStrategyMap();
     }
+
+//    public AbstractResponseResolver() {
+//        streamSerialStrategyMap = new HashMap<>();
+//        objectSerialStrategyMap = new HashMap<>();
+//        objectSerialStrategyMap.put(APPLICATION_JSON.toString(), new JsonStrategy());
+//        objectSerialStrategyMap.put("text", new TextStrategy());
+//        streamSerialStrategyMap.put("application", new ApplicationStrategy());
+//        streamSerialStrategyMap.put("*", new StaticFileStrategy());
+//    }
+
+    public abstract Map<String, SerializationStrategy> initSerialStrategyMap();
 
     protected FullHttpResponse createFullResponse(HttpResponseEntity responseEntity) {
         HttpHeaders headers = setCookieIfNecessary(responseEntity);
@@ -71,7 +67,7 @@ public abstract class AbstractResponseResolver implements HttpResponseResolver {
     public void resolve(Object returnValue, ConnectContext context, HttpResponseStatus status) {
         HttpHeaders requestHeaders = context.getRequest().getHttpHeaders();
         HttpHeaders responseHeaders = context.getResponse().getResponseHeaders();
-        SerializationStrategy strategy = genSerialStrategy(returnValue, requestHeaders.get(ACCEPT), responseHeaders.get(CONTENT_TYPE));
+        SerializationStrategy strategy = getStrategy(requestHeaders.get(ACCEPT), responseHeaders.get(CONTENT_TYPE));
         try {
             ByteBuf byteBuf = strategy.serialize(returnValue, getCharset(responseHeaders));
             resolveByteBuf(byteBuf, context, status);
@@ -95,25 +91,16 @@ public abstract class AbstractResponseResolver implements HttpResponseResolver {
         return Charset.defaultCharset();
     }
 
-    protected SerializationStrategy genSerialStrategy(Object returnValue, String acceptStr, String contentType) {
-        boolean isStream = ClassUtils.isAssignable(returnValue.getClass(), InputStream.class);
-        if (isStream) {
-            return getStrategy(streamSerialStrategyMap, acceptStr, contentType);
-        } else {
-            return getStrategy(objectSerialStrategyMap, acceptStr, contentType);
-        }
-    }
-
-    private SerializationStrategy getStrategy(Map<String, SerializationStrategy> strategyMap, String acceptStr, String contentType) {
+    private SerializationStrategy getStrategy(String acceptStr, String contentType) {
         SerializationStrategy bestStrategy = null;
         if (StringUtils.isNotBlank(contentType)) {
-            bestStrategy = getStrategyByMediaType(strategyMap, contentType);
+            bestStrategy = getStrategyByMediaType(contentType);
         }
         if (bestStrategy == null) {
             if (StringUtils.isNotBlank(acceptStr)) {
                 String[] accepts = StringUtils.split(StringUtils.replace(acceptStr, " ", ""), ",");
                 for (String accept : accepts) {
-                    bestStrategy = getStrategyByMediaType(strategyMap, accept);
+                    bestStrategy = getStrategyByMediaType(accept);
                     if (bestStrategy != null) {
                         return bestStrategy;
                     }
@@ -126,16 +113,16 @@ public abstract class AbstractResponseResolver implements HttpResponseResolver {
         return getDefaultStrategy();
     }
 
-    private SerializationStrategy getStrategyByMediaType(Map<String, SerializationStrategy> strategyMap, String contentType) {
-        SerializationStrategy bestStrategy = strategyMap.get(contentType);
+    private SerializationStrategy getStrategyByMediaType(String contentType) {
+        SerializationStrategy bestStrategy = serialStrategyMap.get(contentType);
         if (bestStrategy == null) {
-            return strategyMap.get(getMainMediaType(contentType));
+            return serialStrategyMap.get(getMainMediaType(contentType));
         }
         return bestStrategy;
     }
 
     private SerializationStrategy getDefaultStrategy() {
-        return objectSerialStrategyMap.get("text");
+        return serialStrategyMap.get("text/*");
     }
 
     private String getMainMediaType(String mediaType) {

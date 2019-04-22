@@ -8,13 +8,12 @@ import com.liugeng.mthttp.pojo.HttpRequestEntity;
 import com.liugeng.mthttp.router.ConnectContext;
 import com.liugeng.mthttp.router.resovler.HttpResponseResolver;
 import com.liugeng.mthttp.router.HttpConnectContext;
-import com.liugeng.mthttp.router.resovler.TextPlainResponseResolver;
+import com.liugeng.mthttp.router.resovler.MethodResponseBodyResolver;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
-import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 @ChannelHandler.Sharable
@@ -28,7 +27,7 @@ public class ExceptionCaughtHandler extends ChannelInboundHandlerAdapter {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         log.error(ctx.channel().id() + "出现异常：" + cause, cause);
         ConnectContext connectContext = new HttpConnectContext(createTmpRequest(ctx.channel()));
-        HttpResponseResolver responseResolver = new TextPlainResponseResolver();
+        HttpResponseResolver responseResolver = new MethodResponseBodyResolver();
         if (cause instanceof HttpRequestException) {
             HttpRequestException hrException = (HttpRequestException) cause;
             responseResolver.resolve(cause.getMessage(), connectContext, hrException.getHttpStatus());

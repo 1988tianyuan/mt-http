@@ -7,4 +7,6 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 public interface HttpResponseResolver {
 
 	void resolve(Object returnValue, ConnectContext context, HttpResponseStatus status);
+
+	boolean supportReturnValue(Object returnValue);
 }

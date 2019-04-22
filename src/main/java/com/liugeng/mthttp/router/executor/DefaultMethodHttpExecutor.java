@@ -7,7 +7,7 @@ import com.liugeng.mthttp.constant.StringConstants;
 import com.liugeng.mthttp.pojo.Cookies;
 import com.liugeng.mthttp.pojo.HttpSession;
 import com.liugeng.mthttp.router.ExecutedMethodWrapper;
-import com.liugeng.mthttp.router.resovler.TextPlainResponseResolver;
+import com.liugeng.mthttp.router.resovler.MethodResponseBodyResolver;
 
 import com.liugeng.mthttp.exception.HttpRequestException;
 import com.liugeng.mthttp.router.ConnectContext;
@@ -18,12 +18,13 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 
-public class DefaultMethodHttpExecutor extends AbstractHttpExecutor {
+public class DefaultMethodHttpExecutor extends AbstractMethodHttpExecutor {
 
 	private ExecutedMethodWrapper userMethod;
 
-	public DefaultMethodHttpExecutor(ExecutedMethodWrapper userMethod) {
+	public DefaultMethodHttpExecutor(ExecutedMethodWrapper userMethod, MethodResponseBodyResolver resolver) {
 		this.userMethod = userMethod;
+		addResolver(resolver);
 	}
 
 	@Override
@@ -34,10 +35,8 @@ public class DefaultMethodHttpExecutor extends AbstractHttpExecutor {
 	}
 
 	private void createResponse(Object returnValue, ConnectContext context) throws Exception {
-		HttpResponseResolver resolver = chooseRspResolver(returnValue, context);
 		setSessionId(context.getSession(), context.getResponseCookies());
-		// todo
-		context.getResponse().getResponseHeaders().set(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN);
+		HttpResponseResolver resolver = selectResolver(returnValue);
 		resolver.resolve(returnValue, context, HttpResponseStatus.OK);
 	}
 
@@ -53,11 +52,6 @@ public class DefaultMethodHttpExecutor extends AbstractHttpExecutor {
 		cookie.setPath("/");
 		cookie.setDomain(config.getString(SERVER_BIND_HOST));
 		responseCookies.addCookie(cookie);
-	}
-
-	private HttpResponseResolver chooseRspResolver(Object returnValue, ConnectContext context) {
-		// todo
-		return new TextPlainResponseResolver();
 	}
 
 	private Object invokeUserMethod(Object[] args) throws Exception {
@@ -85,6 +79,4 @@ public class DefaultMethodHttpExecutor extends AbstractHttpExecutor {
 			);
 		}
 	}
-
-
 }

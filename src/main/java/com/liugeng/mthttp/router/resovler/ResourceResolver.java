@@ -1,35 +1,34 @@
 package com.liugeng.mthttp.router.resovler;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.*;
-import static io.netty.handler.codec.http.HttpHeaderValues.*;
-
-import java.io.InputStream;
-import java.nio.charset.Charset;
+import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.lang3.ClassUtils;
-import org.apache.commons.lang3.StringUtils;
-
 import com.liugeng.mthttp.pojo.HttpResponseEntity;
-import com.liugeng.mthttp.pojo.HttpSession;
 import com.liugeng.mthttp.router.ConnectContext;
 import com.liugeng.mthttp.router.resovler.serialization.SerializationStrategy;
+import com.liugeng.mthttp.router.resovler.serialization.TextStrategy;
+import com.liugeng.mthttp.utils.ClassUtils;
+import com.liugeng.mthttp.utils.io.Resource;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
 
-public class TextPlainResponseResolver extends AbstractResponseResolver {
+public class ResourceResolver extends AbstractResponseResolver {
+
+	@Override
+	public Map<String, SerializationStrategy> initSerialStrategyMap() {
+		Map<String, SerializationStrategy> serialStrategyMap = new HashMap<>();
+		serialStrategyMap.put("application/*", new TextStrategy());
+		return serialStrategyMap;
+	}
 
 	@Override
 	protected void resolveByteBuf(ByteBuf byteBuf, ConnectContext context, HttpResponseStatus status) {
 		HttpResponseEntity responseEntity = context.getResponse();
 		HttpHeaders headers = responseEntity.getResponseHeaders();
-		headers.set(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN + "; " + HttpHeaderValues.CHARSET + "=" + Charset.forName("utf-8"));
 		headers.set(HttpHeaderNames.CONTENT_LENGTH, byteBuf.readableBytes());
 		responseEntity.setBodyBuf(byteBuf);
 		responseEntity.setResponseStatus(status);
@@ -39,4 +38,8 @@ public class TextPlainResponseResolver extends AbstractResponseResolver {
 		checkKeepAlive(context.getRequest().getHttpHeaders(), channel);
 	}
 
+	@Override
+	public boolean supportReturnValue(Object returnValue) {
+		return returnValue != null && ClassUtils.isAssignable(returnValue.getClass(), Resource.class);
+	}
 }

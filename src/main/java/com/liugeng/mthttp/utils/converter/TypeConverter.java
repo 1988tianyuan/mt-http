@@ -9,12 +9,6 @@ import java.util.Map;
 
 public abstract class TypeConverter {
 
-
-
-
-
-
-
     protected Map<String, Object> getReqParams(ConnectContext context) {
         Map<String, List<String>> queryParams = context.getRequest().getQueryParams();
         Map<String, Object> reqAttributes = context.getRequest().getAttributes();

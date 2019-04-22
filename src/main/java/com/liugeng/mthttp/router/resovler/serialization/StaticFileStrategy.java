@@ -4,7 +4,7 @@ import java.nio.charset.Charset;
 
 import io.netty.buffer.ByteBuf;
 
-public class StaticeFileStrategy implements SerializationStrategy {
+public class StaticFileStrategy implements SerializationStrategy {
 
 	@Override
 	public ByteBuf serialize(Object response, Charset charset) {

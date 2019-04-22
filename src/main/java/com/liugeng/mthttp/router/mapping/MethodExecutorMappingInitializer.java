@@ -20,6 +20,7 @@ import com.liugeng.mthttp.router.annotation.HttpController;
 import com.liugeng.mthttp.router.annotation.HttpRouter;
 import com.liugeng.mthttp.router.executor.DefaultMethodHttpExecutor;
 import com.liugeng.mthttp.router.executor.HttpExecutor;
+import com.liugeng.mthttp.router.resovler.MethodResponseBodyResolver;
 import com.liugeng.mthttp.utils.ClassUtils;
 import com.liugeng.mthttp.utils.MetadataReader;
 import com.liugeng.mthttp.utils.SimpleMetadataReader;
@@ -103,7 +104,7 @@ public class MethodExecutorMappingInitializer extends ExecutorMappingInitializer
 		Set<String> pathsOnMethod = methodAnnoAttr.getByDefault(ROUTER_PATH, Collections.singleton("/"));
 		HttpMethod httpMethod = HttpMethod.valueOf((String)methodAnnoAttr.getByDefault(ROUTER_METHOD,  Collections.singleton("GET")).toArray()[0]);
 		ExecutedMethodWrapper methodWrapper = genMethodWrapper(classMetadata.getClassName(), methodInfo);
-		HttpExecutor httpExecutor = new DefaultMethodHttpExecutor(methodWrapper);
+		HttpExecutor httpExecutor = new DefaultMethodHttpExecutor(methodWrapper, new MethodResponseBodyResolver());
 		httpExecutor.config(config);
 		for (String path : pathsOnMethod) {
 			pathsOnClass.forEach(pathOnClass -> {
@@ -134,8 +135,6 @@ public class MethodExecutorMappingInitializer extends ExecutorMappingInitializer
 		methodWrapper.setParameters(methodWrapper.getUserMethod().getParameters());
 		return methodWrapper;
 	}
-
-
 
 
 }

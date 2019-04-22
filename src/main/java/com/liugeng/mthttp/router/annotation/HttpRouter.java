@@ -18,4 +18,6 @@ public @interface HttpRouter {
 	HttpMethod method() default GET;
 
 	String[] path() default {""};
+
+	String[] produces() default {"*/*"};
 }

@@ -7,11 +7,9 @@ import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import com.liugeng.mthttp.constant.HttpMethod;
 import com.liugeng.mthttp.exception.HttpRequestException;
 import com.liugeng.mthttp.router.ConnectContext;
-import com.liugeng.mthttp.router.resovler.ApplicationResolver;
-import com.liugeng.mthttp.router.resovler.HttpResponseResolver;
+import com.liugeng.mthttp.router.resovler.ResourceResolver;
 import com.liugeng.mthttp.utils.io.ClassPathResource;
 import com.liugeng.mthttp.utils.io.Resource;
 import io.netty.handler.codec.http.HttpHeaderNames;
@@ -40,7 +38,7 @@ public class GeneralResourceHttpExecutor implements HttpExecutor {
 		}
 		// todo
 		context.getResponse().getResponseHeaders().set(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.APPLICATION_OCTET_STREAM);
-		new ApplicationResolver().resolve(inputStream, context, HttpResponseStatus.OK);
+		new ResourceResolver().resolve(inputStream, context, HttpResponseStatus.OK);
 	}
 
 	private String genRealUri(String path) {

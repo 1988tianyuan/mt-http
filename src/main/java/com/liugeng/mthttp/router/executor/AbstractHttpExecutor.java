@@ -4,6 +4,8 @@ import com.liugeng.mthttp.pojo.Cookies;
 import com.liugeng.mthttp.router.ConnectContext;
 import com.liugeng.mthttp.router.annotation.CookieValue;
 import com.liugeng.mthttp.router.annotation.HttpRequestBody;
+import com.liugeng.mthttp.router.resovler.HttpResponseResolver;
+import com.liugeng.mthttp.utils.Assert;
 import com.liugeng.mthttp.utils.converter.*;
 
 import org.apache.commons.configuration2.PropertiesConfiguration;
@@ -12,54 +14,48 @@ import org.apache.commons.lang3.ClassUtils;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Parameter;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
-
-import static com.liugeng.mthttp.router.executor.AbstractHttpExecutor.ArgTypeToken.*;
-import static com.liugeng.mthttp.router.executor.AbstractHttpExecutor.ArgTypeToken.REFERENCE_TYPE;
 
 public abstract class AbstractHttpExecutor implements HttpExecutor {
 
-    private static final Map<AbstractHttpExecutor.ArgTypeToken, TypeConverter> converterMap = new HashMap<>();
+    private volatile List<HttpResponseResolver> resolverList;
 
     protected PropertiesConfiguration config;
-
-    static {
-        converterMap.put(REQUEST_BODY, new RequestBodyTypeConverter());
-        converterMap.put(PRIMITIVE_VALUE, new PrimitiveTypeConverter());
-        converterMap.put(REQUEST_COOKIE, new CookieValueTypeConverter());
-        converterMap.put(REFERENCE_TYPE, new ReferenceTypeConverter());
-        converterMap.put(RESPONSE_COOKIES, new ResponseCookiesTypeConverter());
-    }
-
-    protected ArgTypeToken checkArgType(Parameter parameter) {
-        Class<?> argType = parameter.getType();
-        Annotation[] annotations = parameter.getDeclaredAnnotations();
-        for (Annotation annotation : annotations) {
-            if (annotation.annotationType() == HttpRequestBody.class) {
-                return REQUEST_BODY;
-            } else if (annotation.annotationType() == CookieValue.class) {
-                return REQUEST_COOKIE;
-            }
-        }
-        if (ClassUtils.isPrimitiveOrWrapper(argType)
-                || ClassUtils.isAssignable(argType, String.class)) {
-            return PRIMITIVE_VALUE;
-        }
-        return REFERENCE_TYPE;
-    }
-
-    protected Object convertArgType(ArgTypeToken token, Parameter parameter, ConnectContext context) throws Exception {
-        TypeConverter converter = converterMap.get(token);
-        return converter.convertIfNecessary(parameter, context);
-    }
-
-    public enum ArgTypeToken {
-        REQUEST_BODY, RESPONSE_COOKIES, PRIMITIVE_VALUE,
-        REQUEST_COOKIE, REFERENCE_TYPE
-    }
 
     @Override
     public void config(PropertiesConfiguration config) {
         this.config = config;
+    }
+
+    protected HttpResponseResolver selectResolver(Object returnValue) {
+        Assert.notEmpty(resolverList, "resolverList is empty! can't resolve your response!");
+        for (HttpResponseResolver resolver : resolverList) {
+            if (resolver.supportReturnValue(returnValue)) {
+                return resolver;
+            }
+        }
+        throw new IllegalArgumentException("can't resolve this returnValue type: " + returnValue.getClass());
+    }
+
+    public void setResolverList(List<HttpResponseResolver> resolverList) {
+        this.resolverList = resolverList;
+    }
+
+    public void addResolverList(List<HttpResponseResolver> resolverList) {
+        initResolverList();
+        this.resolverList.addAll(resolverList);
+    }
+
+    public void addResolver(HttpResponseResolver resolver) {
+        initResolverList();
+        this.resolverList.add(resolver);
+    }
+
+    private void initResolverList() {
+        if (this.resolverList == null) {
+            this.resolverList = new LinkedList<>();
+        }
     }
 }
