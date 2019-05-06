@@ -12,6 +12,6 @@ public class ServerInitializer extends ChannelInitializer<NioServerSocketChannel
 
 	@Override
 	protected void initChannel(NioServerSocketChannel nioServerSocketChannel) throws Exception {
-		log.debug("服务器启动中...");
+		log.debug("starting server...");
 	}
 }

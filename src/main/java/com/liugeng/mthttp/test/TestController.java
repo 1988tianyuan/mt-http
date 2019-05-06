@@ -22,10 +22,6 @@ public class TestController {
 		return s;
 	}
 
-
-
-
-
 	@HttpRouter(path = {"/hihihi"}, method = HttpMethod.GET)
 	public String hello(Cookies cookies) {
 	    cookies.addCookie("hehehe", "123456");

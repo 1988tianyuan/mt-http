@@ -4,6 +4,7 @@ import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.liugeng.mthttp.exception.HttpRequestException;
 import org.apache.commons.lang3.ClassUtils;
 
 import com.liugeng.mthttp.pojo.HttpResponseEntity;
@@ -27,7 +28,6 @@ public class MethodResponseBodyResolver extends AbstractResponseResolver {
 		Map<String, SerializationStrategy> serialStrategyMap = new HashMap<>();
 		TextStrategy textStrategy = new TextStrategy();
 		serialStrategyMap.put("text/*", textStrategy);
-
 		JsonStrategy jsonStrategy = new JsonStrategy();
 		serialStrategyMap.put("application/json", jsonStrategy);
 		serialStrategyMap.put("application/*+json", jsonStrategy);
@@ -35,17 +35,23 @@ public class MethodResponseBodyResolver extends AbstractResponseResolver {
 	}
 
 	@Override
-	protected void resolveByteBuf(ByteBuf byteBuf, ConnectContext context, HttpResponseStatus status) {
-		HttpResponseEntity responseEntity = context.getResponse();
-		HttpHeaders headers = responseEntity.getResponseHeaders();
-		headers.set(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN + "; " + HttpHeaderValues.CHARSET + "=" + Charset.forName("utf-8"));
-		headers.set(HttpHeaderNames.CONTENT_LENGTH, byteBuf.readableBytes());
-		responseEntity.setBodyBuf(byteBuf);
-		responseEntity.setResponseStatus(status);
-		FullHttpResponse fullHttpResponse = createFullResponse(responseEntity);
-		Channel channel = context.getRequest().getChannel();
-		channel.writeAndFlush(fullHttpResponse);
-		checkKeepAlive(context.getRequest().getHttpHeaders(), channel);
+	public void resolve(Object response, ConnectContext context, HttpResponseStatus status) {
+		try {
+			HttpResponseEntity responseEntity = context.getResponse();
+			HttpHeaders headers = responseEntity.getResponseHeaders();
+			SerializationStrategy strategy = getStrategy(context);
+			ByteBuf byteBuf = strategy.serialize(response, getCharset(headers));
+			headers.set(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.TEXT_PLAIN + "; " + HttpHeaderValues.CHARSET + "=" + Charset.forName("utf-8"));
+			headers.set(HttpHeaderNames.CONTENT_LENGTH, byteBuf.readableBytes());
+			responseEntity.setBodyBuf(byteBuf);
+			responseEntity.setResponseStatus(status);
+			FullHttpResponse fullHttpResponse = createFullResponse(responseEntity);
+			Channel channel = context.getRequest().getChannel();
+			channel.writeAndFlush(fullHttpResponse);
+			checkKeepAlive(context.getRequest().getHttpHeaders(), channel);
+		} catch (Exception e) {
+			throw new HttpRequestException("error during resolve the http response, url: " + context.getRequest().getPath(), e, HttpResponseStatus.INTERNAL_SERVER_ERROR);
+		}
 	}
 
 	@Override

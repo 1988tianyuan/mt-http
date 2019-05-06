@@ -78,7 +78,7 @@ public class HttpDispatcherHandler extends SimpleChannelInboundHandler<FullHttpR
 		HttpExecutor executor = getExecutor(requestEntity);
 		Assert.executorExists(executor, requestEntity.getPath());
 		handleCookies(connectContext);
-		handleSession(connectContext);
+		handleSessionIfNeccessary(connectContext);
 		executor.execute(connectContext);
 	}
 
@@ -111,7 +111,7 @@ public class HttpDispatcherHandler extends SimpleChannelInboundHandler<FullHttpR
 	 * refresh session lastAccessedTime
 	 * @param connectContext
 	 */
-	private void handleSession(ConnectContext connectContext) {
+	private void handleSessionIfNeccessary(ConnectContext connectContext) {
 		// todo, make session with multi kind of storage(like redis...)
 		Cookies cookies = connectContext.getRequestCookies();
 		String sessionId = cookies.getCookieValue(SESSION_ID);

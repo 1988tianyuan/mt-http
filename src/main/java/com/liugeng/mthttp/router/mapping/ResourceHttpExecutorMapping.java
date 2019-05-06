@@ -8,6 +8,7 @@ import com.liugeng.mthttp.constant.HttpMethod;
 import com.liugeng.mthttp.pojo.HttpRequestEntity;
 import com.liugeng.mthttp.router.executor.GeneralResourceHttpExecutor;
 import com.liugeng.mthttp.router.executor.HttpExecutor;
+import com.liugeng.mthttp.router.resovler.ResourceResolver;
 
 public class ResourceHttpExecutorMapping implements HttpExecutorMapping {
 
@@ -15,7 +16,9 @@ public class ResourceHttpExecutorMapping implements HttpExecutorMapping {
 
 	public ResourceHttpExecutorMapping(String rootPath) {
 		urlResourceMapping = new HashMap<>();
-		urlResourceMapping.put("/.*", new GeneralResourceHttpExecutor(rootPath));
+		GeneralResourceHttpExecutor resourceExecutor = new GeneralResourceHttpExecutor(rootPath);
+		resourceExecutor.addResolver(new ResourceResolver());
+		urlResourceMapping.put("/.*", resourceExecutor);
 	}
 
 	@Override

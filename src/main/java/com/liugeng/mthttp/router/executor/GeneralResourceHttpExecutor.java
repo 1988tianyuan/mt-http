@@ -1,9 +1,14 @@
 package com.liugeng.mthttp.router.executor;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
+import java.util.LinkedList;
+import java.util.List;
 
+import com.liugeng.mthttp.router.resovler.HttpResponseResolver;
 import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -16,7 +21,7 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpResponseStatus;
 
-public class GeneralResourceHttpExecutor implements HttpExecutor {
+public class GeneralResourceHttpExecutor extends AbstractHttpExecutor {
 
 	private final String rootPath;
 
@@ -28,17 +33,23 @@ public class GeneralResourceHttpExecutor implements HttpExecutor {
 	public void execute(ConnectContext context) {
 		String requestPath = context.getRequest().getPath();
 		String requestUri = genRealUri(requestPath);
-		Resource resource = null;
-		InputStream inputStream = null;
-		try {
-			resource = new ClassPathResource(requestUri);
-			inputStream = resource.getInputStream();
-		} catch (FileNotFoundException e) {
-			throw new HttpRequestException("can't find your request resource: " + requestPath, HttpResponseStatus.NOT_FOUND);
-		}
+		HttpResponseResolver resolver;
+		Resource resource = new ClassPathResource(requestUri);
+		resolver = selectResolver(resource);
 		// todo
-		context.getResponse().getResponseHeaders().set(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.APPLICATION_OCTET_STREAM);
-		new ResourceResolver().resolve(inputStream, context, HttpResponseStatus.OK);
+		context.getResponse().getResponseHeaders().set(HttpHeaderNames.CONTENT_TYPE, selectRespMediaType(resource.getDescription()));
+		resolver.resolve(resource, context, HttpResponseStatus.OK);
+	}
+
+	private String selectRespMediaType(String description) {
+		// todo
+		if (StringUtils.endsWith(description, ".html")) {
+			return "text/html";
+		} else if (StringUtils.endsWith(description, ".ico")) {
+			return "image/x-icon";
+		} else {
+			return HttpHeaderValues.APPLICATION_OCTET_STREAM.toString();
+		}
 	}
 
 	private String genRealUri(String path) {
@@ -52,10 +63,5 @@ public class GeneralResourceHttpExecutor implements HttpExecutor {
 			path = "/" + path;
 		}
 		return rootPath + path;
-	}
-
-	@Override
-	public void config(PropertiesConfiguration config) throws Exception {
-
 	}
 }

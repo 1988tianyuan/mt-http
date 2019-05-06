@@ -7,6 +7,7 @@ import com.liugeng.mthttp.pojo.Cookies;
 import com.liugeng.mthttp.pojo.HttpResponseEntity;
 import com.liugeng.mthttp.router.ConnectContext;
 import com.liugeng.mthttp.router.resovler.serialization.SerializationStrategy;
+import com.liugeng.mthttp.utils.io.Resource;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.*;
@@ -26,15 +27,6 @@ public abstract class AbstractResponseResolver implements HttpResponseResolver {
     public AbstractResponseResolver() {
         this.serialStrategyMap = initSerialStrategyMap();
     }
-
-//    public AbstractResponseResolver() {
-//        streamSerialStrategyMap = new HashMap<>();
-//        objectSerialStrategyMap = new HashMap<>();
-//        objectSerialStrategyMap.put(APPLICATION_JSON.toString(), new JsonStrategy());
-//        objectSerialStrategyMap.put("text", new TextStrategy());
-//        streamSerialStrategyMap.put("application", new ApplicationStrategy());
-//        streamSerialStrategyMap.put("*", new StaticFileStrategy());
-//    }
 
     public abstract Map<String, SerializationStrategy> initSerialStrategyMap();
 
@@ -64,19 +56,7 @@ public abstract class AbstractResponseResolver implements HttpResponseResolver {
         }
     }
 
-    public void resolve(Object returnValue, ConnectContext context, HttpResponseStatus status) {
-        HttpHeaders requestHeaders = context.getRequest().getHttpHeaders();
-        HttpHeaders responseHeaders = context.getResponse().getResponseHeaders();
-        SerializationStrategy strategy = getStrategy(requestHeaders.get(ACCEPT), responseHeaders.get(CONTENT_TYPE));
-        try {
-            ByteBuf byteBuf = strategy.serialize(returnValue, getCharset(responseHeaders));
-            resolveByteBuf(byteBuf, context, status);
-        } catch (Exception e) {
-            throw new HttpRequestException("error during resolve the resource: " + context.getRequest().getPath(), e, HttpResponseStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    private Charset getCharset(HttpHeaders responseHeaders) {
+    protected Charset getCharset(HttpHeaders responseHeaders) {
         String contentTypeStr = responseHeaders.get(HttpHeaderNames.CONTENT_TYPE);
         String charsetStr;
         if (contentTypeStr != null && contentTypeStr.contains("charset=")) {
@@ -91,7 +71,11 @@ public abstract class AbstractResponseResolver implements HttpResponseResolver {
         return Charset.defaultCharset();
     }
 
-    private SerializationStrategy getStrategy(String acceptStr, String contentType) {
+    protected SerializationStrategy getStrategy(ConnectContext context) {
+        HttpHeaders requestHeaders = context.getRequest().getHttpHeaders();
+        HttpHeaders responseHeaders = context.getResponse().getResponseHeaders();
+        String acceptStr = requestHeaders.get(ACCEPT);
+        String contentType = responseHeaders.get(CONTENT_TYPE);
         SerializationStrategy bestStrategy = null;
         if (StringUtils.isNotBlank(contentType)) {
             bestStrategy = getStrategyByMediaType(contentType);
@@ -133,6 +117,4 @@ public abstract class AbstractResponseResolver implements HttpResponseResolver {
             return "*";
         }
     }
-
-    protected abstract void resolveByteBuf(ByteBuf byteBuf, ConnectContext context, HttpResponseStatus status);
 }

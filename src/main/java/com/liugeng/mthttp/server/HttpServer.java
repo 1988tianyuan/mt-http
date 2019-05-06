@@ -33,8 +33,6 @@ public class HttpServer implements Server {
 
 	private AtomicBoolean started = new AtomicBoolean(false);
 
-	private String scanPackage;
-
 	private PropertiesConfiguration config;
 
 	public HttpServer(int port) {
@@ -49,14 +47,15 @@ public class HttpServer implements Server {
 				.channel(NioServerSocketChannel.class)
 				.handler(new ServerInitializer())
 				.childHandler(new ClientInitializer(prepareMvcEnv(dispatcherGroup)));
-			String host = config.getString(SERVER_BIND_HOST, "0.0.0.0");
+			final String host = config.getString(SERVER_BIND_HOST, "0.0.0.0");
 			bootstrap.bind(host, port)
 				.addListener(future -> {
 					if(future.isSuccess()){
-						log.debug("bind port: {} successfully! server has been started!", port);
+						log.debug("bind host: {} and port: {} successfully! server has been started!", host, port);
 						started.set(true);
 						callback.onSuccess();
 					} else {
+						log.warn("failed to bind host: {} and port: {} ! server is not started successfully!", host, port);
 						callback.onError();
 					}
 				});
